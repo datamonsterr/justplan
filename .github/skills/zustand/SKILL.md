@@ -102,8 +102,11 @@ We are migrating slices from plain `StateCreator` objects to **class-based actio
 
 ```ts
 type Setter = StoreSetter<HomeStore>;
-export const createRecentSlice = (set: Setter, get: () => HomeStore, _api?: unknown) =>
-  new RecentActionImpl(set, get, _api);
+export const createRecentSlice = (
+  set: Setter,
+  get: () => HomeStore,
+  _api?: unknown
+) => new RecentActionImpl(set, get, _api);
 
 export class RecentActionImpl {
   readonly #get: () => HomeStore;
@@ -129,7 +132,9 @@ export type RecentAction = Pick<RecentActionImpl, keyof RecentActionImpl>;
 - `flattenActions` binds methods to the original class instance and supports prototype methods and class fields.
 
 ```ts
-const createStore: StateCreator<HomeStore, [['zustand/devtools', never]]> = (...params) => ({
+const createStore: StateCreator<HomeStore, [["zustand/devtools", never]]> = (
+  ...params
+) => ({
   ...initialState,
   ...flattenActions<HomeStoreAction>([
     createRecentSlice(...params),
@@ -147,12 +152,15 @@ const createStore: StateCreator<HomeStore, [['zustand/devtools', never]]> = (...
 type PublicActions<T> = { [K in keyof T]: T[K] };
 
 export type ChatGroupAction = PublicActions<
-  ChatGroupInternalAction & ChatGroupLifecycleAction & ChatGroupMemberAction & ChatGroupCurdAction
+  ChatGroupInternalAction &
+    ChatGroupLifecycleAction &
+    ChatGroupMemberAction &
+    ChatGroupCurdAction
 >;
 
 export const chatGroupAction: StateCreator<
   ChatGroupStore,
-  [['zustand/devtools', never]],
+  [["zustand/devtools", never]],
   [],
   ChatGroupAction
 > = (...params) =>

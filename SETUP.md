@@ -13,7 +13,7 @@ Your development environment is ready. Follow these steps to start developing.
 ✅ **Docker** configuration (development & production)  
 ✅ **Supabase** migrations and client setup  
 ✅ **Complete folder structure** for the project  
-✅ **All dependencies** installed  
+✅ **All dependencies** installed
 
 ---
 
@@ -199,10 +199,11 @@ docker-compose down      # Stop all services
 ### Starting a Development Session
 
 1. **Start services:**
+
    ```bash
    # Option 1: Local (requires Redis installed)
    npm run dev
-   
+
    # Option 2: Docker
    docker-compose up
    ```
@@ -219,6 +220,7 @@ docker-compose down      # Stop all services
 ### Adding a New Feature
 
 1. Create feature branch:
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
@@ -226,6 +228,7 @@ docker-compose down      # Stop all services
 2. Develop feature with tests
 
 3. Test locally:
+
    ```bash
    npm run test:all
    npm run type-check
@@ -246,6 +249,7 @@ docker-compose down      # Stop all services
 ### View Local Database
 
 When using local Supabase:
+
 - Studio UI: http://localhost:54323
 - Database URL: postgresql://postgres:postgres@localhost:54322/postgres
 
@@ -271,12 +275,13 @@ VALUES ('00000000-0000-0000-0000-000000000001', 'test@example.com', 'Test User')
 
 -- Insert test tasks
 INSERT INTO tasks (user_id, title, estimated_duration_minutes)
-VALUES 
+VALUES
   ('00000000-0000-0000-0000-000000000001', 'Example Task 1', 60),
   ('00000000-0000-0000-0000-000000000001', 'Example Task 2', 30);
 ```
 
 Apply seed:
+
 ```bash
 npx supabase db reset  # Resets DB and runs seed
 ```

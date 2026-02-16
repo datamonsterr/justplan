@@ -1,0 +1,30 @@
+# Dependencies
+node_modules
+
+# Build outputs
+.next
+out
+dist
+build
+
+# Coverage
+coverage
+
+# Test results
+playwright-report
+test-results
+
+# Supabase
+supabase/.branches
+supabase/.temp
+
+# Logs
+*.log
+
+# Third-party configs we don't control
+.github/skills/**
+.github/agents/**
+
+# Cache
+.cache
+tsconfig.tsbuildinfo

@@ -14,7 +14,7 @@ In `src/types/hotkey.ts`:
 ```typescript
 export const HotkeyEnum = {
   // existing...
-  ClearChat: 'clearChat', // Add new
+  ClearChat: "clearChat", // Add new
 } as const;
 ```
 
@@ -23,7 +23,7 @@ export const HotkeyEnum = {
 In `src/const/hotkeys.ts`:
 
 ```typescript
-import { KeyMapEnum as Key, combineKeys } from '@lobehub/ui';
+import { KeyMapEnum as Key, combineKeys } from "@lobehub/ui";
 
 export const HOTKEYS_REGISTRATION: HotkeyRegistration = [
   {
@@ -42,8 +42,8 @@ In `src/locales/default/hotkey.ts`:
 ```typescript
 const hotkey: HotkeyI18nTranslations = {
   clearChat: {
-    desc: '清空当前会话的所有消息记录',
-    title: '清空聊天记录',
+    desc: "清空当前会话的所有消息记录",
+    title: "清空聊天记录",
   },
 };
 ```
@@ -67,9 +67,14 @@ export const useRegisterChatHotkeys = () => {
 ### 5. Add Tooltip (Optional)
 
 ```tsx
-const clearChatHotkey = useUserStore(settingsSelectors.getHotkeyById(HotkeyEnum.ClearChat));
+const clearChatHotkey = useUserStore(
+  settingsSelectors.getHotkeyById(HotkeyEnum.ClearChat)
+);
 
-<Tooltip hotkey={clearChatHotkey} title={t('clearChat.title', { ns: 'hotkey' })}>
+<Tooltip
+  hotkey={clearChatHotkey}
+  title={t("clearChat.title", { ns: "hotkey" })}
+>
   <Button icon={<DeleteOutlined />} onClick={clearMessages} />
 </Tooltip>;
 ```

@@ -13,7 +13,7 @@ tags: javascript, localStorage, storage, caching, performance
 
 ```typescript
 function getTheme() {
-  return localStorage.getItem('theme') ?? 'light';
+  return localStorage.getItem("theme") ?? "light";
 }
 // Called 10 times = 10 storage reads
 ```
@@ -45,7 +45,9 @@ let cookieCache: Record<string, string> | null = null;
 
 function getCookie(name: string) {
   if (!cookieCache) {
-    cookieCache = Object.fromEntries(document.cookie.split('; ').map((c) => c.split('=')));
+    cookieCache = Object.fromEntries(
+      document.cookie.split("; ").map((c) => c.split("="))
+    );
   }
   return cookieCache[name];
 }
@@ -56,12 +58,12 @@ function getCookie(name: string) {
 If storage can change externally (another tab, server-set cookies), invalidate cache:
 
 ```typescript
-window.addEventListener('storage', (e) => {
+window.addEventListener("storage", (e) => {
   if (e.key) storageCache.delete(e.key);
 });
 
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') {
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") {
     storageCache.clear();
   }
 });

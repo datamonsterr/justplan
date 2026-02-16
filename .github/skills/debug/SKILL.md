@@ -9,14 +9,14 @@ user-invocable: false
 ## Basic Usage
 
 ```typescript
-import debug from 'debug';
+import debug from "debug";
 
 // Format: lobe-[module]:[submodule]
-const log = debug('lobe-server:market');
+const log = debug("lobe-server:market");
 
-log('Simple message');
-log('With variable: %O', object);
-log('Formatted number: %d', number);
+log("Simple message");
+log("With variable: %O", object);
+log("Formatted number: %d", number);
 ```
 
 ## Namespace Conventions
@@ -38,7 +38,7 @@ log('Formatted number: %d', number);
 ### Browser
 
 ```javascript
-localStorage.debug = 'lobe-*';
+localStorage.debug = "lobe-*";
 ```
 
 ### Node.js
@@ -51,16 +51,16 @@ DEBUG=lobe-* pnpm dev
 ### Electron
 
 ```typescript
-process.env.DEBUG = 'lobe-*';
+process.env.DEBUG = "lobe-*";
 ```
 
 ## Example
 
 ```typescript
 // src/server/routers/edge/market/index.ts
-import debug from 'debug';
+import debug from "debug";
 
-const log = debug('lobe-edge-router:market');
+const log = debug("lobe-edge-router:market");
 
-log('getAgent input: %O', input);
+log("getAgent input: %O", input);
 ```

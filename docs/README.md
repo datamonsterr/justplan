@@ -9,6 +9,7 @@ Welcome to the JustPlan project documentation! This folder contains comprehensiv
 ## 📚 Document Overview
 
 ### [01. Requirements](./01-requirements.md)
+
 **Complete feature specifications and project scope**
 
 - Executive summary and value proposition
@@ -28,6 +29,7 @@ Welcome to the JustPlan project documentation! This folder contains comprehensiv
 ---
 
 ### [02. Development Plan](./02-development-plan.md)
+
 **Phased roadmap with actionable tasks**
 
 - **Phase 0** (Week 1-2): Foundation & infrastructure setup
@@ -38,6 +40,7 @@ Welcome to the JustPlan project documentation! This folder contains comprehensiv
 - **Phase 5** (Week 17-20): Team collaboration features
 
 Each phase includes:
+
 - Objectives and deliverables
 - Detailed task breakdowns
 - Acceptance criteria
@@ -48,6 +51,7 @@ Each phase includes:
 ---
 
 ### [03. Architecture](./03-architecture.md)
+
 **System design and technical decisions**
 
 - High-level architecture diagrams
@@ -67,6 +71,7 @@ Each phase includes:
 ---
 
 ### [04. Database Schema](./04-database-schema.md)
+
 **Complete data model and SQL definitions**
 
 - Entity Relationship Diagram (ERD)
@@ -83,6 +88,7 @@ Each phase includes:
 ---
 
 ### [05. Test Plan](./05-test-plan.md)
+
 **Comprehensive testing strategy and test cases**
 
 - Test pyramid approach (70% Unit, 20% Integration, 10% E2E)
@@ -112,16 +118,19 @@ Each phase includes:
 ## 🚀 Quick Start
 
 ### For Project Stakeholders
+
 1. Read [Requirements](./01-requirements.md) - understand the vision
 2. Review [Development Plan](./02-development-plan.md) - see the roadmap
 3. Check timeline (20 weeks total, MVP at week 10)
 
 ### For Developers
+
 1. Review [Architecture](./03-architecture.md) - understand the system design
 2. Study [Database Schema](./04-database-schema.md) - learn the data model
 3. Follow [Development Plan](./02-development-plan.md) - execute phase by phase
 
 ### To Begin Implementation
+
 1. Set up development environment (see Phase 0 in Development Plan)
 2. Create Supabase project
 3. Apply database migrations (from Database Schema doc)
@@ -166,12 +175,14 @@ This provides the benefits of automatic scheduling (like Reclaim.ai) with the fl
 ## 📊 Key Metrics & Success Criteria
 
 ### MVP Success (End of Phase 2)
+
 - ✅ User can create and manage 50+ tasks
 - ✅ Tasks automatically scheduled on calendar
 - ✅ Two-way Google sync working reliably
 - ✅ Scheduling algorithm handles 100+ tasks in < 5 seconds
 
 ### Production Ready (End of Phase 4)
+
 - ✅ 10 beta users using daily for 2+ weeks
 - ✅ 90%+ satisfaction with auto-scheduling
 - ✅ Zero critical bugs
@@ -181,25 +192,25 @@ This provides the benefits of automatic scheduling (like Reclaim.ai) with the fl
 
 ## 🛠️ Tech Stack Summary
 
-| Layer | Technologies |
-|-------|-------------|
-| **Frontend** | Next.js 14, React 18, TypeScript, Tailwind CSS, Shadcn UI |
-| **Backend** | Next.js API, Supabase (PostgreSQL), BullMQ (job queue) |
-| **Infrastructure** | Vercel (hosting), Upstash Redis, Google APIs |
-| **DevOps** | GitHub Actions, Vitest, Playwright, ESLint |
+| Layer              | Technologies                                              |
+| ------------------ | --------------------------------------------------------- |
+| **Frontend**       | Next.js 14, React 18, TypeScript, Tailwind CSS, Shadcn UI |
+| **Backend**        | Next.js API, Supabase (PostgreSQL), BullMQ (job queue)    |
+| **Infrastructure** | Vercel (hosting), Upstash Redis, Google APIs              |
+| **DevOps**         | GitHub Actions, Vitest, Playwright, ESLint                |
 
 ---
 
 ## 📅 Timeline
 
-| Phase | Duration | End Date | Milestone |
-|-------|----------|----------|-----------|
-| Phase 0 | 2 weeks | Week 2 | Infrastructure ready |
-| Phase 1 | 4 weeks | Week 6 | Task management + Google read |
-| Phase 2 | 4 weeks | Week 10 | **MVP Launch** (auto-scheduling) |
-| Phase 3 | 3 weeks | Week 13 | Custom workflows |
-| Phase 4 | 3 weeks | Week 16 | **Public Beta** |
-| Phase 5 | 4 weeks | Week 20 | Team features |
+| Phase   | Duration | End Date | Milestone                        |
+| ------- | -------- | -------- | -------------------------------- |
+| Phase 0 | 2 weeks  | Week 2   | Infrastructure ready             |
+| Phase 1 | 4 weeks  | Week 6   | Task management + Google read    |
+| Phase 2 | 4 weeks  | Week 10  | **MVP Launch** (auto-scheduling) |
+| Phase 3 | 3 weeks  | Week 13  | Custom workflows                 |
+| Phase 4 | 3 weeks  | Week 16  | **Public Beta**                  |
+| Phase 5 | 4 weeks  | Week 20  | Team features                    |
 
 **Total:** ~5 months from start to full vision
 
@@ -218,6 +229,7 @@ This provides the benefits of automatic scheduling (like Reclaim.ai) with the fl
 ## 💰 Estimated Costs
 
 **Monthly operating costs (100 users):**
+
 - Vercel: $0-20
 - Supabase: $0-25
 - Upstash Redis: $0
@@ -231,6 +243,7 @@ Scales comfortably to 1,000 users before major infrastructure changes needed.
 ## 📖 Additional Resources
 
 ### Internal Links
+
 - [Requirements](./01-requirements.md)
 - [Development Plan](./02-development-plan.md)
 - [Architecture](./03-architecture.md)
@@ -238,6 +251,7 @@ Scales comfortably to 1,000 users before major infrastructure changes needed.
 - [Test Plan](./05-test-plan.md)
 
 ### External References
+
 - [Next.js Documentation](https://nextjs.org/docs)
 - [Supabase Documentation](https://supabase.com/docs)
 - [Google Calendar API](https://developers.google.com/calendar/api)
@@ -248,6 +262,7 @@ Scales comfortably to 1,000 users before major infrastructure changes needed.
 ## 🤝 Contributing
 
 When ready to implement:
+
 1. Create a new branch for your phase/feature
 2. Follow the task breakdown in the Development Plan
 3. Write tests before implementation (TDD)
@@ -259,6 +274,7 @@ When ready to implement:
 ## 📝 Document Maintenance
 
 These documents are living artifacts. Update them when:
+
 - Requirements change or new features are prioritized
 - Architectural decisions are made (add new ADRs)
 - Database schema is modified (update migrations)

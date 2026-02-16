@@ -41,22 +41,22 @@ import { Flexbox } from '@lobehub/ui';
 
 ```jsx
 // Classic three-column layout
-<Flexbox horizontal height={'100%'} width={'100%'}>
+<Flexbox horizontal height={"100%"} width={"100%"}>
   {/* Left sidebar */}
   <Flexbox
     width={260}
     style={{
       borderRight: `1px solid ${theme.colorBorderSecondary}`,
-      height: '100%',
-      overflowY: 'auto',
+      height: "100%",
+      overflowY: "auto",
     }}
   >
     <SidebarContent />
   </Flexbox>
 
   {/* Center content */}
-  <Flexbox flex={1} style={{ height: '100%' }}>
-    <Flexbox flex={1} padding={24} style={{ overflowY: 'auto' }}>
+  <Flexbox flex={1} style={{ height: "100%" }}>
+    <Flexbox flex={1} padding={24} style={{ overflowY: "auto" }}>
       <MainContent />
     </Flexbox>
 
@@ -64,7 +64,7 @@ import { Flexbox } from '@lobehub/ui';
     <Flexbox
       style={{
         borderTop: `1px solid ${theme.colorBorderSecondary}`,
-        padding: '16px 24px',
+        padding: "16px 24px",
       }}
     >
       <Footer />

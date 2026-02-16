@@ -44,10 +44,10 @@ Hybrid routing: Next.js App Router (static pages) + React Router DOM (main SPA).
 ### Router Utilities
 
 ```tsx
-import { dynamicElement, redirectElement, ErrorBoundary } from '@/utils/router';
+import { dynamicElement, redirectElement, ErrorBoundary } from "@/utils/router";
 
-element: dynamicElement(() => import('./chat'), 'Desktop > Chat');
-element: redirectElement('/settings/profile');
+element: dynamicElement(() => import("./chat"), "Desktop > Chat");
+element: redirectElement("/settings/profile");
 errorElement: <ErrorBoundary resetPath="/chat" />;
 ```
 
@@ -57,19 +57,19 @@ errorElement: <ErrorBoundary resetPath="/chat" />;
 
 ```tsx
 // ❌ Wrong
-import Link from 'next/link';
+import Link from "next/link";
 <Link href="/">Home</Link>;
 
 // ✅ Correct
-import { Link } from 'react-router-dom';
+import { Link } from "react-router-dom";
 <Link to="/">Home</Link>;
 
 // In components
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 const navigate = useNavigate();
-navigate('/chat');
+navigate("/chat");
 
 // From stores
 const navigate = useGlobalStore.getState().navigate;
-navigate?.('/settings');
+navigate?.("/settings");
 ```

@@ -73,7 +73,8 @@ export const initialTopicState: ChatTopicState = {
 ### selectors.ts
 
 ```typescript
-const currentTopics = (s: ChatStoreState): ChatTopic[] | undefined => s.topicMaps[s.activeId];
+const currentTopics = (s: ChatStoreState): ChatTopic[] | undefined =>
+  s.topicMaps[s.activeId];
 
 const getTopicById =
   (id: string) =>

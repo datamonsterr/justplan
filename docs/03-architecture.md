@@ -11,6 +11,7 @@
 JustPlan is built as a modern, full-stack web application using Next.js 14+ (App Router), Supabase (PostgreSQL + Auth), and Google APIs. The architecture prioritizes rapid development, scalability, and maintainability while keeping infrastructure costs low.
 
 **Key Architectural Principles:**
+
 - **Server-first:** Leverage Next.js Server Components and Server Actions
 - **API abstraction:** Google APIs hidden behind service layer for testability
 - **Database-driven:** PostgreSQL as single source of truth
@@ -63,22 +64,26 @@ JustPlan is built as a modern, full-stack web application using Next.js 14+ (App
 ### Component Layers
 
 #### 1. Presentation Layer (Next.js Frontend)
+
 - **Server Components:** Initial page renders, data fetching
 - **Client Components:** Interactive UI (calendar, drag-drop)
 - **Server Actions:** Form submissions, mutations
 - **React Query (TanStack Query):** Client-side caching and optimistic updates
 
 #### 2. API Layer (Next.js Backend)
+
 - **Route Handlers:** RESTful endpoints for external integrations
 - **Server Actions:** Type-safe mutations from client components
 - **Middleware:** Auth checks, rate limiting, logging
 
 #### 3. Business Logic Layer
+
 - **Services:** Task service, calendar service, workflow service
 - **Scheduling Engine:** Standalone module with algorithm
 - **Integration Layer:** Google API clients with retry logic
 
 #### 4. Data Layer
+
 - **Supabase PostgreSQL:** Primary database
 - **Row Level Security (RLS):** Multi-tenant data isolation
 - **Migrations:** Version-controlled schema changes
@@ -89,53 +94,53 @@ JustPlan is built as a modern, full-stack web application using Next.js 14+ (App
 
 ### Frontend
 
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| **Next.js** | 14.2+ | React framework with App Router |
-| **React** | 18+ | UI library |
-| **TypeScript** | 5.0+ | Type safety |
-| **Tailwind CSS** | 3.4+ | Utility-first styling |
-| **Shadcn UI** | Latest | Component library (based on Radix UI) |
-| **TanStack Query** | 5.0+ | Server state management, caching |
-| **Zustand** | 4.5+ | Client state management (UI state) |
-| **React Hook Form** | 7.5+ | Form management and validation |
-| **Zod** | 3.22+ | Schema validation (client + server) |
-| **date-fns** | 3.0+ | Date manipulation (lightweight) |
-| **DnD Kit** | 6.1+ | Drag-and-drop for calendar |
+| Technology          | Version | Purpose                               |
+| ------------------- | ------- | ------------------------------------- |
+| **Next.js**         | 14.2+   | React framework with App Router       |
+| **React**           | 18+     | UI library                            |
+| **TypeScript**      | 5.0+    | Type safety                           |
+| **Tailwind CSS**    | 3.4+    | Utility-first styling                 |
+| **Shadcn UI**       | Latest  | Component library (based on Radix UI) |
+| **TanStack Query**  | 5.0+    | Server state management, caching      |
+| **Zustand**         | 4.5+    | Client state management (UI state)    |
+| **React Hook Form** | 7.5+    | Form management and validation        |
+| **Zod**             | 3.22+   | Schema validation (client + server)   |
+| **date-fns**        | 3.0+    | Date manipulation (lightweight)       |
+| **DnD Kit**         | 6.1+    | Drag-and-drop for calendar            |
 
 ### Backend
 
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| **Next.js API** | 14.2+ | Server-side logic, API routes |
-| **Supabase JS** | 2.39+ | Supabase client |
-| **PostgreSQL** | 15+ | Database (via Supabase) |
-| **Supabase Auth** | - | Authentication (Google OAuth) |
-| **Google APIs** | - | Calendar API v3, Tasks API v1 |
-| **BullMQ** | 5.0+ | Job queue for scheduling tasks |
-| **Redis** | 7.2+ | Queue backend + caching |
+| Technology        | Version | Purpose                        |
+| ----------------- | ------- | ------------------------------ |
+| **Next.js API**   | 14.2+   | Server-side logic, API routes  |
+| **Supabase JS**   | 2.39+   | Supabase client                |
+| **PostgreSQL**    | 15+     | Database (via Supabase)        |
+| **Supabase Auth** | -       | Authentication (Google OAuth)  |
+| **Google APIs**   | -       | Calendar API v3, Tasks API v1  |
+| **BullMQ**        | 5.0+    | Job queue for scheduling tasks |
+| **Redis**         | 7.2+    | Queue backend + caching        |
 
 ### Development & Testing
 
-| Technology | Purpose |
-|------------|---------|
-| **Vitest** | Unit and integration testing |
-| **Testing Library** | React component testing |
-| **Playwright** | E2E testing |
-| **ESLint** | Code linting |
-| **Prettier** | Code formatting |
-| **Husky** | Git hooks |
-| **TypeScript** | Type checking |
+| Technology          | Purpose                      |
+| ------------------- | ---------------------------- |
+| **Vitest**          | Unit and integration testing |
+| **Testing Library** | React component testing      |
+| **Playwright**      | E2E testing                  |
+| **ESLint**          | Code linting                 |
+| **Prettier**        | Code formatting              |
+| **Husky**           | Git hooks                    |
+| **TypeScript**      | Type checking                |
 
 ### DevOps & Infrastructure
 
-| Technology | Purpose |
-|------------|---------|
-| **Vercel** | Next.js hosting and deployment |
-| **Supabase Cloud** | Database and auth hosting |
-| **Upstash Redis** | Serverless Redis for job queue |
-| **GitHub Actions** | CI/CD pipeline |
-| **Sentry** | Error tracking and monitoring |
+| Technology         | Purpose                        |
+| ------------------ | ------------------------------ |
+| **Vercel**         | Next.js hosting and deployment |
+| **Supabase Cloud** | Database and auth hosting      |
+| **Upstash Redis**  | Serverless Redis for job queue |
+| **GitHub Actions** | CI/CD pipeline                 |
+| **Sentry**         | Error tracking and monitoring  |
 
 ---
 
@@ -173,6 +178,7 @@ JustPlan is built as a modern, full-stack web application using Next.js 14+ (App
 ```
 
 **Key Points:**
+
 - Supabase handles OAuth flow with Google
 - Google tokens stored securely in Supabase
 - Access token used for Calendar/Tasks API calls
@@ -298,30 +304,30 @@ function scheduleTasksGreedy(
   availability: TimeSlot[],
   constraints: Constraints
 ): Schedule {
-  const schedule = []
-  const sortedTasks = prioritizeTasks(tasks) // Sort by priority
-  
+  const schedule = [];
+  const sortedTasks = prioritizeTasks(tasks); // Sort by priority
+
   for (const task of sortedTasks) {
     const suitableSlot = findBestSlot(
       availability,
       task.estimatedDuration,
       task.deadline,
       constraints
-    )
-    
+    );
+
     if (suitableSlot) {
       schedule.push({
         taskId: task.id,
         start: suitableSlot.start,
-        end: suitableSlot.end
-      })
-      
+        end: suitableSlot.end,
+      });
+
       // Remove allocated time from availability
-      availability = removeSlot(availability, suitableSlot)
+      availability = removeSlot(availability, suitableSlot);
     }
   }
-  
-  return schedule
+
+  return schedule;
 }
 ```
 
@@ -360,12 +366,12 @@ function scheduleTasksGreedy(
 
 **Sync Strategy:**
 
-| Direction | Strategy | Conflict Resolution |
-|-----------|----------|---------------------|
-| **Calendar → App** | Poll every 5 min OR webhook | Read-only (app doesn't modify external events) |
-| **App → Calendar** | Immediate on schedule change | App is source of truth for task blocks |
-| **Tasks → App** | Poll every 5 min | Timestamp-based (most recent wins) |
-| **App → Tasks** | Immediate on task change | App is source of truth for workflow states |
+| Direction          | Strategy                     | Conflict Resolution                            |
+| ------------------ | ---------------------------- | ---------------------------------------------- |
+| **Calendar → App** | Poll every 5 min OR webhook  | Read-only (app doesn't modify external events) |
+| **App → Calendar** | Immediate on schedule change | App is source of truth for task blocks         |
+| **Tasks → App**    | Poll every 5 min             | Timestamp-based (most recent wins)             |
+| **App → Tasks**    | Immediate on task change     | App is source of truth for workflow states     |
 
 ### 5. Database Schema Architecture
 
@@ -470,7 +476,7 @@ function scheduleTasksGreedy(
 └──────────────────────────────────────────────────┘
 ```
 
-*Full schema details in separate document*
+_Full schema details in separate document_
 
 ---
 
@@ -551,12 +557,14 @@ justplan/
 **Decision:** Use Next.js 14+ App Router (not Pages Router)
 
 **Rationale:**
+
 - Server Components reduce client-side JavaScript
 - Server Actions provide type-safe mutations without API endpoints
 - Better performance with streaming and partial rendering
 - Future-proof (Vercel's recommended approach)
 
 **Trade-offs:**
+
 - Steeper learning curve
 - Some third-party libraries not yet compatible
 
@@ -567,6 +575,7 @@ justplan/
 **Decision:** Use Supabase for database and auth
 
 **Rationale:**
+
 - Built-in authentication with Google OAuth
 - Row-Level Security for multi-tenant data
 - Real-time subscriptions (useful for team features)
@@ -574,6 +583,7 @@ justplan/
 - Lower operational overhead
 
 **Trade-offs:**
+
 - Vendor lock-in (mitigated by open-source Postgres)
 - Cost increases with scale (acceptable for target user count)
 
@@ -584,12 +594,14 @@ justplan/
 **Decision:** Start with greedy algorithm (not constraint satisfaction or AI)
 
 **Rationale:**
+
 - Simpler to implement and debug
 - Fast enough for 100+ tasks
 - Deterministic behavior (easier to explain to users)
 - Can iterate based on user feedback
 
 **Trade-offs:**
+
 - Not optimal solution (may not find best schedule)
 - May struggle with complex constraints
 - Future: can upgrade to CSP or heuristic search
@@ -601,12 +613,14 @@ justplan/
 **Decision:** Use BullMQ (not in-process scheduling)
 
 **Rationale:**
+
 - Decouple scheduling from web requests (better UX)
 - Retry logic and failure handling
 - Rate limiting to prevent abuse
 - Scales horizontally (multiple workers)
 
 **Trade-offs:**
+
 - Requires Redis (added infrastructure)
 - More complex than in-process
 - Use Upstash Redis (serverless) to minimize cost
@@ -618,12 +632,14 @@ justplan/
 **Decision:** Workflow states live only in app (not synced to Google)
 
 **Rationale:**
+
 - Google Tasks doesn't support custom states
 - Syncing would require hacks (labels, specific task lists)
 - Simpler to keep workflow logic in one place
 - Easier to build features (automatic transitions)
 
 **Trade-offs:**
+
 - Users can't see workflow states in Google Tasks
 - Reduces utility of Google Tasks integration
 - Accepted: Google Tasks is "backup" view only
@@ -712,16 +728,19 @@ CREATE POLICY "Users can insert own tasks"
 ## Monitoring & Observability
 
 ### Error Tracking
+
 - **Sentry:** Capture frontend and backend errors
 - **Error boundaries:** Graceful degradation in React
 - **Logging:** Structured logs with context (user_id, request_id)
 
 ### Performance Monitoring
+
 - **Vercel Analytics:** Track Web Vitals (LCP, FID, CLS)
 - **Database monitoring:** Supabase dashboard (slow queries, connection pool)
 - **API monitoring:** Track Google API latency and errors
 
 ### User Analytics
+
 - **Posthog** (or similar): Track feature usage
 - **Key metrics:**
   - Tasks created per user
@@ -778,11 +797,9 @@ CREATE POLICY "Users can insert own tasks"
 - **Development:** Local (`localhost:3000`)
   - Supabase local (optional)
   - Test Google project
-  
 - **Staging:** Vercel preview deployment
   - Staging Supabase project
   - Test Google credentials
-  
 - **Production:** Vercel production
   - Production Supabase project
   - Production Google credentials
@@ -791,16 +808,16 @@ CREATE POLICY "Users can insert own tasks"
 
 ## Cost Estimation (Monthly)
 
-| Service | Tier | Users | Cost |
-|---------|------|-------|------|
-| **Vercel** | Hobby/Pro | - | $0-20 |
-| **Supabase** | Free/Pro | 100 | $0-25 |
-| **Upstash Redis** | Free | - | $0 |
-| **Sentry** | Developer | - | $0 |
-| **Domain** | - | - | $10 |
-| **Total** | | | **$10-55/month** |
+| Service           | Tier      | Users | Cost             |
+| ----------------- | --------- | ----- | ---------------- |
+| **Vercel**        | Hobby/Pro | -     | $0-20            |
+| **Supabase**      | Free/Pro  | 100   | $0-25            |
+| **Upstash Redis** | Free      | -     | $0               |
+| **Sentry**        | Developer | -     | $0               |
+| **Domain**        | -         | -     | $10              |
+| **Total**         |           |       | **$10-55/month** |
 
-*Scales to ~100 users before hitting paid tiers*
+_Scales to ~100 users before hitting paid tiers_
 
 ---
 
@@ -809,7 +826,7 @@ CREATE POLICY "Users can insert own tasks"
 ### Scalability Path
 
 1. **100-1,000 users:** Current architecture scales
-2. **1,000-10,000 users:** 
+2. **1,000-10,000 users:**
    - Move to dedicated Redis instance
    - Consider database read replicas
    - Implement more aggressive caching

@@ -10,6 +10,7 @@
 ## Schema Overview
 
 The database is designed to support:
+
 - Multi-tenant architecture (user isolation via RLS)
 - Personal task management with extensibility to teams
 - Custom workflow states and transitions
@@ -17,6 +18,7 @@ The database is designed to support:
 - Automatic scheduling history
 
 **Key Principles:**
+
 - ✅ Normalize data (3NF) to prevent anomalies
 - ✅ Use UUIDs for primary keys (better for distributed systems)
 - ✅ Timestamp all records (created_at, updated_at)
@@ -35,14 +37,14 @@ erDiagram
     users ||--o{ workflow_states : defines
     users ||--o{ google_calendar_events : syncs
     users ||--o{ scheduling_history : has
-    
+
     workflow_states ||--o{ tasks : categorizes
     workflow_states ||--o{ workflow_transitions : from
     workflow_states ||--o{ workflow_transitions : to
-    
+
     tasks ||--o{ task_state_history : tracks
     tasks ||--o{ task_blocks : scheduled_as
-    
+
     users {
         uuid id PK
         string email UK
@@ -52,7 +54,7 @@ erDiagram
         timestamp created_at
         timestamp updated_at
     }
-    
+
     user_settings {
         uuid id PK
         uuid user_id FK
@@ -63,7 +65,7 @@ erDiagram
         json preferences
         timestamp updated_at
     }
-    
+
     working_hours {
         uuid id PK
         uuid user_id FK
@@ -72,7 +74,7 @@ erDiagram
         time end_time
         boolean is_working_day
     }
-    
+
     tasks {
         uuid id PK
         uuid user_id FK
@@ -92,7 +94,7 @@ erDiagram
         timestamp updated_at
         timestamp deleted_at
     }
-    
+
     workflow_states {
         uuid id PK
         uuid user_id FK
@@ -104,7 +106,7 @@ erDiagram
         int scheduling_priority_boost
         timestamp created_at
     }
-    
+
     workflow_transitions {
         uuid id PK
         uuid user_id FK
@@ -115,7 +117,7 @@ erDiagram
         boolean is_enabled
         timestamp created_at
     }
-    
+
     task_state_history {
         uuid id PK
         uuid task_id FK
@@ -124,7 +126,7 @@ erDiagram
         string trigger_type
         timestamp transitioned_at
     }
-    
+
     google_calendar_events {
         uuid id PK
         uuid user_id FK
@@ -137,7 +139,7 @@ erDiagram
         boolean is_all_day
         timestamp synced_at
     }
-    
+
     scheduling_history {
         uuid id PK
         uuid user_id FK
@@ -185,6 +187,7 @@ CREATE POLICY "Users can update own profile"
 ```
 
 **Notes:**
+
 - Syncs with Supabase `auth.users` table
 - `google_user_id` for linking to Google OAuth identity
 
@@ -204,7 +207,7 @@ CREATE TABLE user_settings (
     buffer_time_minutes INTEGER NOT NULL DEFAULT 15,
     preferences JSONB DEFAULT '{}', -- Flexible custom preferences
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
+
     CONSTRAINT week_start_day_valid CHECK (week_start_day BETWEEN 0 AND 6),
     CONSTRAINT default_duration_positive CHECK (default_task_duration_minutes > 0),
     CONSTRAINT buffer_time_positive CHECK (buffer_time_minutes >= 0)
@@ -222,6 +225,7 @@ CREATE POLICY "Users can manage own settings"
 ```
 
 **Preferences JSONB Example:**
+
 ```json
 {
   "theme": "dark",
@@ -247,7 +251,7 @@ CREATE TABLE working_hours (
     start_time TIME NOT NULL,
     end_time TIME NOT NULL,
     is_working_day BOOLEAN NOT NULL DEFAULT true,
-    
+
     CONSTRAINT day_of_week_valid CHECK (day_of_week BETWEEN 0 AND 6),
     CONSTRAINT valid_time_range CHECK (end_time > start_time),
     CONSTRAINT unique_user_day UNIQUE (user_id, day_of_week)
@@ -265,10 +269,11 @@ CREATE POLICY "Users can manage own working hours"
 ```
 
 **Example Data:**
+
 ```sql
 -- Monday to Friday: 9 AM - 5 PM
 INSERT INTO working_hours (user_id, day_of_week, start_time, end_time, is_working_day)
-VALUES 
+VALUES
     ('user-uuid', 1, '09:00', '17:00', true), -- Monday
     ('user-uuid', 2, '09:00', '17:00', true), -- Tuesday
     ('user-uuid', 3, '09:00', '17:00', true), -- Wednesday
@@ -296,25 +301,25 @@ CREATE TABLE tasks (
     deadline TIMESTAMP WITH TIME ZONE,
     priority task_priority NOT NULL DEFAULT 'medium',
     workflow_state_id UUID REFERENCES workflow_states(id) ON DELETE SET NULL,
-    
+
     -- Scheduling fields
     is_scheduled BOOLEAN NOT NULL DEFAULT false,
     scheduled_start TIMESTAMP WITH TIME ZONE,
     scheduled_end TIMESTAMP WITH TIME ZONE,
     is_pinned BOOLEAN NOT NULL DEFAULT false, -- Manually pinned to specific time
-    
+
     -- Google integration
     google_task_id TEXT, -- ID in Google Tasks
     google_calendar_event_id TEXT, -- ID of calendar event for this task
-    
+
     -- Metadata (flexible)
     metadata JSONB DEFAULT '{}',
-    
+
     -- Timestamps
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     deleted_at TIMESTAMP WITH TIME ZONE, -- Soft delete
-    
+
     CONSTRAINT estimated_duration_positive CHECK (estimated_duration_minutes > 0),
     CONSTRAINT valid_scheduled_times CHECK (
         (is_scheduled = false AND scheduled_start IS NULL AND scheduled_end IS NULL) OR
@@ -339,6 +344,7 @@ CREATE POLICY "Users can manage own tasks"
 ```
 
 **Metadata JSONB Example:**
+
 ```json
 {
   "tags": ["work", "urgent"],
@@ -367,7 +373,7 @@ CREATE TABLE workflow_states (
     should_auto_schedule BOOLEAN NOT NULL DEFAULT true, -- Include in scheduling?
     scheduling_priority_boost INTEGER NOT NULL DEFAULT 0, -- -10 to +10
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
+
     CONSTRAINT unique_user_state_name UNIQUE (user_id, name),
     CONSTRAINT valid_priority_boost CHECK (scheduling_priority_boost BETWEEN -10 AND 10)
 );
@@ -385,6 +391,7 @@ CREATE POLICY "Users can manage own workflow states"
 ```
 
 **Default States Seed Data:**
+
 ```sql
 INSERT INTO workflow_states (user_id, name, color, order, is_terminal, scheduling_priority_boost, should_auto_schedule)
 VALUES
@@ -421,7 +428,7 @@ CREATE TABLE workflow_transitions (
     condition_value JSONB NOT NULL, -- Flexible condition parameters
     is_enabled BOOLEAN NOT NULL DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
+
     CONSTRAINT different_states CHECK (from_state_id != to_state_id)
 );
 
@@ -519,7 +526,7 @@ CREATE TABLE google_calendar_events (
     is_recurring BOOLEAN NOT NULL DEFAULT false,
     recurrence_rule TEXT, -- RRULE
     synced_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
+
     CONSTRAINT unique_google_event UNIQUE (user_id, google_event_id),
     CONSTRAINT valid_event_times CHECK (end_time > start_time)
 );
@@ -538,6 +545,7 @@ CREATE POLICY "Users can manage own calendar events"
 ```
 
 **Notes:**
+
 - Cached for performance (avoid repeated Google API calls)
 - Refreshed periodically (every 5 minutes or via webhook)
 - Soft delete: remove events that disappear from Google
@@ -560,7 +568,7 @@ CREATE TABLE scheduling_history (
     success BOOLEAN NOT NULL DEFAULT true,
     error_message TEXT,
     metadata JSONB DEFAULT '{}', -- Additional context
-    
+
     CONSTRAINT duration_positive CHECK (duration_ms >= 0)
 );
 
@@ -660,9 +668,9 @@ WITH busy_times AS (
     FROM google_calendar_events
     WHERE user_id = 'user-uuid'
     AND start_time BETWEEN '2026-02-17' AND '2026-02-24'
-    
+
     UNION ALL
-    
+
     SELECT scheduled_start, scheduled_end
     FROM tasks
     WHERE user_id = 'user-uuid'
@@ -683,7 +691,7 @@ WHERE t.user_id = 'user-uuid'
 AND t.is_scheduled = false
 AND t.deleted_at IS NULL
 AND ws.should_auto_schedule = true
-ORDER BY 
+ORDER BY
     CASE t.priority
         WHEN 'high' THEN 3
         WHEN 'medium' THEN 2
@@ -731,6 +739,7 @@ AND t.deadline <= NOW() + ((wt.condition_value->>'hours_before_deadline')::int *
 ```
 
 **Running Migrations:**
+
 ```bash
 # Using Supabase CLI
 supabase db reset # Reset and re-run all migrations
@@ -743,11 +752,13 @@ supabase db diff # Generate diff for schema changes
 ## Backup & Recovery
 
 ### Automated Backups (Supabase)
+
 - **Daily backups:** Automatic (last 7 days)
 - **Point-in-time recovery:** Available on Pro plan
 - **Export:** Can export to SQL dump
 
 ### Manual Backup
+
 ```bash
 # Export entire database
 pg_dump -h db.xxx.supabase.co -U postgres -d postgres > backup.sql
@@ -762,19 +773,19 @@ pg_dump -h db.xxx.supabase.co -U postgres -t tasks -t workflow_states > tasks_ba
 
 ### Index Strategy
 
-| Table | Column(s) | Reason |
-|-------|-----------|--------|
-| tasks | user_id | Filter by user (most common) |
-| tasks | workflow_state_id | Join with states |
-| tasks | deadline | Sort/filter by deadline |
-| tasks | is_scheduled, scheduled_start | Find scheduled tasks |
-| google_calendar_events | start_time, end_time | Range queries for availability |
-| task_state_history | task_id | Audit trail lookup |
+| Table                  | Column(s)                     | Reason                         |
+| ---------------------- | ----------------------------- | ------------------------------ |
+| tasks                  | user_id                       | Filter by user (most common)   |
+| tasks                  | workflow_state_id             | Join with states               |
+| tasks                  | deadline                      | Sort/filter by deadline        |
+| tasks                  | is_scheduled, scheduled_start | Find scheduled tasks           |
+| google_calendar_events | start_time, end_time          | Range queries for availability |
+| task_state_history     | task_id                       | Audit trail lookup             |
 
 ### Query Optimization Tips
 
 1. **Use partial indexes** for common filters (e.g., `WHERE deleted_at IS NULL`)
-2. **Avoid SELECT *** - specify columns
+2. **Avoid SELECT \*** - specify columns
 3. **Use EXPLAIN ANALYZE** to identify slow queries
 4. **Consider materialized views** for complex aggregations
 5. **Batch inserts/updates** for Google sync
@@ -786,6 +797,7 @@ pg_dump -h db.xxx.supabase.co -U postgres -t tasks -t workflow_states > tasks_ba
 ### Row-Level Security (RLS)
 
 All tables have RLS enabled with policies ensuring:
+
 - Users can only access their own data
 - `user_id` checked in every policy
 - Service role can bypass RLS (for background jobs)

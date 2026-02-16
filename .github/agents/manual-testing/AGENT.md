@@ -12,6 +12,7 @@
 This agent automates manual testing workflows for JustPlan using the Chrome MCP server. It executes predefined test scenarios, validates expected outcomes, and reports results.
 
 **Use Cases:**
+
 - Smoke testing after deployments
 - Regression testing before releases
 - New feature validation
@@ -47,11 +48,11 @@ Configure in your MCP settings:
 
 Create test accounts with different personas:
 
-| Email | Password | Persona | Google Account |
-|-------|----------|---------|----------------|
+| Email                   | Password   | Persona    | Google Account           |
+| ----------------------- | ---------- | ---------- | ------------------------ |
 | testuser1@justplan.test | Test123!@# | Power User | test.poweruser@gmail.com |
 | testuser2@justplan.test | Test123!@# | Basic User | test.basicuser@gmail.com |
-| testuser3@justplan.test | Test123!@# | Team Lead | test.teamlead@gmail.com |
+| testuser3@justplan.test | Test123!@# | Team Lead  | test.teamlead@gmail.com  |
 
 **Note:** Use Google Workspace test accounts for OAuth integration testing.
 
@@ -64,6 +65,7 @@ Create test accounts with different personas:
 **Objective:** Verify first-time user experience
 
 **Steps:**
+
 1. Navigate to https://justplan.app
 2. Click "Login with Google"
 3. Complete Google OAuth (use testuser1@gmail.com)
@@ -74,12 +76,14 @@ Create test accounts with different personas:
 8. Verify empty state UI for tasks and calendar
 
 **Expected Results:**
+
 - ✅ Successful login without errors
 - ✅ 6 default workflow states visible
 - ✅ Onboarding tour completes
 - ✅ Empty states show helpful prompts
 
 **Test Data:**
+
 - Fresh account with no existing data
 
 ---
@@ -89,6 +93,7 @@ Create test accounts with different personas:
 **Objective:** Verify basic task management
 
 **Steps:**
+
 1. Login as testuser1
 2. Navigate to /tasks
 3. Click "New Task" button
@@ -111,6 +116,7 @@ Create test accounts with different personas:
 15. Verify task removed from list
 
 **Expected Results:**
+
 - ✅ Task created successfully
 - ✅ All fields saved correctly
 - ✅ Edits persist after save
@@ -118,6 +124,7 @@ Create test accounts with different personas:
 - ✅ Deletion removes task
 
 **Test Data:**
+
 ```json
 {
   "title": "Write project proposal",
@@ -135,6 +142,7 @@ Create test accounts with different personas:
 **Objective:** Verify availability settings
 
 **Steps:**
+
 1. Login as testuser1
 2. Navigate to /settings/working-hours
 3. Set Monday-Friday: 9 AM - 5 PM
@@ -148,12 +156,14 @@ Create test accounts with different personas:
 11. Verify breaks shown as unavailable
 
 **Expected Results:**
+
 - ✅ Settings save successfully
 - ✅ Calendar reflects working hours
 - ✅ Break times blocked out
 - ✅ Timezone applied correctly
 
 **Test Data:**
+
 ```json
 {
   "workingHours": [
@@ -163,9 +173,7 @@ Create test accounts with different personas:
     { "day": 4, "start": "09:00", "end": "17:00" },
     { "day": 5, "start": "09:00", "end": "17:00" }
   ],
-  "breakTimes": [
-    { "start": "12:00", "end": "13:00" }
-  ],
+  "breakTimes": [{ "start": "12:00", "end": "13:00" }],
   "bufferMinutes": 15,
   "timezone": "America/New_York"
 }
@@ -178,11 +186,13 @@ Create test accounts with different personas:
 **Objective:** Verify automatic task scheduling
 
 **Prerequisites:**
+
 - Working hours configured
 - Google Calendar connected
 - At least 5 unscheduled tasks
 
 **Steps:**
+
 1. Login as testuser1
 2. Create 5 tasks with varying priorities:
    - Task 1: High priority, deadline tomorrow
@@ -207,6 +217,7 @@ Create test accounts with different personas:
 17. Verify manually moved task not rescheduled
 
 **Expected Results:**
+
 - ✅ All tasks scheduled successfully
 - ✅ Priority order respected
 - ✅ Within working hours
@@ -215,13 +226,39 @@ Create test accounts with different personas:
 - ✅ Manual overrides preserved
 
 **Test Data:**
+
 ```json
 [
-  { "title": "Urgent bug fix", "duration": 60, "priority": "high", "deadline": "+1d" },
-  { "title": "Code review", "duration": 30, "priority": "medium", "deadline": "+3d" },
-  { "title": "Refactor module", "duration": 120, "priority": "high", "deadline": null },
-  { "title": "Update docs", "duration": 45, "priority": "low", "deadline": "+7d" },
-  { "title": "Team meeting prep", "duration": 30, "priority": "medium", "deadline": "+5d" }
+  {
+    "title": "Urgent bug fix",
+    "duration": 60,
+    "priority": "high",
+    "deadline": "+1d"
+  },
+  {
+    "title": "Code review",
+    "duration": 30,
+    "priority": "medium",
+    "deadline": "+3d"
+  },
+  {
+    "title": "Refactor module",
+    "duration": 120,
+    "priority": "high",
+    "deadline": null
+  },
+  {
+    "title": "Update docs",
+    "duration": 45,
+    "priority": "low",
+    "deadline": "+7d"
+  },
+  {
+    "title": "Team meeting prep",
+    "duration": 30,
+    "priority": "medium",
+    "deadline": "+5d"
+  }
 ]
 ```
 
@@ -232,6 +269,7 @@ Create test accounts with different personas:
 **Objective:** Verify custom workflow states and transitions
 
 **Steps:**
+
 1. Login as testuser1
 2. Navigate to /settings/workflows
 3. View default workflow states (6 states)
@@ -256,12 +294,14 @@ Create test accounts with different personas:
 15. Verify all transitions logged
 
 **Expected Results:**
+
 - ✅ Custom state created
 - ✅ State visible in task forms
 - ✅ Transitions work correctly
 - ✅ History tracked
 
 **Test Data:**
+
 ```json
 {
   "state": {
@@ -285,6 +325,7 @@ Create test accounts with different personas:
 **Objective:** Verify condition-based state transitions
 
 **Steps:**
+
 1. Login as testuser1
 2. Navigate to /settings/workflows
 3. Configure transition rule:
@@ -301,6 +342,7 @@ Create test accounts with different personas:
 11. Verify automatic transition logged
 
 **Expected Results:**
+
 - ✅ Transition rule saved
 - ✅ Condition evaluated correctly
 - ✅ State changed automatically
@@ -313,6 +355,7 @@ Create test accounts with different personas:
 **Objective:** Verify two-way Google Calendar sync
 
 **Steps:**
+
 1. Login as testuser1
 2. Navigate to /settings/integrations
 3. Click "Connect Google Calendar"
@@ -332,6 +375,7 @@ Create test accounts with different personas:
 17. Verify event removed from Google Calendar
 
 **Expected Results:**
+
 - ✅ Calendar connected successfully
 - ✅ Existing events imported
 - ✅ New events created in Google
@@ -345,6 +389,7 @@ Create test accounts with different personas:
 **Objective:** Verify Google Tasks import and sync
 
 **Steps:**
+
 1. Login as testuser1 (with Google account)
 2. Create 3 tasks in Google Tasks web app
 3. In JustPlan, navigate to /settings/integrations
@@ -359,6 +404,7 @@ Create test accounts with different personas:
 12. Verify appears in Google Tasks
 
 **Expected Results:**
+
 - ✅ Tasks imported successfully
 - ✅ Metadata preserved
 - ✅ Completion syncs
@@ -371,6 +417,7 @@ Create test accounts with different personas:
 **Objective:** Verify mobile layout and functionality
 
 **Steps:**
+
 1. Open Chrome DevTools
 2. Enable device emulation (iPhone 13 Pro)
 3. Navigate to https://justplan.app
@@ -384,6 +431,7 @@ Create test accounts with different personas:
 11. Test all major features on mobile
 
 **Expected Results:**
+
 - ✅ Responsive layout works
 - ✅ Navigation accessible
 - ✅ Forms usable
@@ -397,6 +445,7 @@ Create test accounts with different personas:
 **Objective:** Verify app performance with many tasks
 
 **Steps:**
+
 1. Login as testuser1
 2. Use bulk import to create 100 tasks
 3. Navigate to /tasks
@@ -411,6 +460,7 @@ Create test accounts with different personas:
 12. Verify smooth scrolling (60 fps)
 
 **Expected Results:**
+
 - ✅ Page load < 2 seconds
 - ✅ Filtering < 500ms
 - ✅ Scheduling < 10 seconds
@@ -497,11 +547,13 @@ After execution, agent generates report:
 ## Results
 
 ### Scenario 1: New User Onboarding ✅
+
 - Duration: 45s
 - All steps passed
 - Screenshot: [view](./screenshots/scenario-1.png)
 
 ### Scenario 4: Auto-Scheduling ❌
+
 - Duration: 2m 15s
 - **Failed at Step 9:** High-priority task not scheduled first
 - Expected: Task 1 at 9:00 AM
@@ -532,31 +584,31 @@ export default {
     headless: false, // Show browser for debugging
     viewport: {
       width: 1920,
-      height: 1080
+      height: 1080,
     },
     slowMo: 100, // Slow down actions for visibility
     devtools: true, // Open DevTools
     args: [
-      '--start-maximized',
-      '--disable-web-security', // For local testing
-      '--disable-features=IsolateOrigins,site-per-process'
-    ]
+      "--start-maximized",
+      "--disable-web-security", // For local testing
+      "--disable-features=IsolateOrigins,site-per-process",
+    ],
   },
   screenshots: {
     onSuccess: true,
     onFailure: true,
     fullPage: true,
-    path: './test-results/screenshots/'
+    path: "./test-results/screenshots/",
   },
   video: {
     enabled: true,
-    path: './test-results/videos/'
+    path: "./test-results/videos/",
   },
   timeout: {
     default: 30000, // 30 seconds
-    navigation: 60000 // 60 seconds for page loads
-  }
-}
+    navigation: 60000, // 60 seconds for page loads
+  },
+};
 ```
 
 ---
@@ -576,8 +628,8 @@ DELETE FROM workflow_states WHERE user_id IN (
 ) AND name NOT IN ('Backlog', 'Ready', 'In Progress', 'Blocked', 'Review', 'Done');
 
 -- Reset to fresh state
-UPDATE users 
-SET created_at = NOW() 
+UPDATE users
+SET created_at = NOW()
 WHERE email LIKE '%@justplan.test';
 ```
 
@@ -591,7 +643,7 @@ name: Manual Test Suite
 
 on:
   schedule:
-    - cron: '0 2 * * *' # Daily at 2 AM
+    - cron: "0 2 * * *" # Daily at 2 AM
   workflow_dispatch: # Manual trigger
 
 jobs:
@@ -599,34 +651,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Chrome
         uses: browser-actions/setup-chrome@latest
-      
+
       - name: Run Manual Tests
         run: |
           npm run agent:manual-testing -- run all
-      
+
       - name: Upload Screenshots
         uses: actions/upload-artifact@v3
         if: always()
         with:
           name: test-screenshots
           path: test-results/screenshots/
-      
+
       - name: Upload Report
         uses: actions/upload-artifact@v3
         if: always()
         with:
           name: test-report
           path: test-results/report.md
-      
+
       - name: Notify on Failure
         if: failure()
         uses: 8398a7/action-slack@v3
         with:
           status: ${{ job.status }}
-          text: 'Manual tests failed! Check artifacts.'
+          text: "Manual tests failed! Check artifacts."
 ```
 
 ---

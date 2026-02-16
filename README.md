@@ -61,6 +61,7 @@
 ### 📊 Visual Diagrams
 
 Created Mermaid diagrams for:
+
 - Workflow state system
 - System architecture
 - Automatic scheduling flow
@@ -83,12 +84,12 @@ Created Mermaid diagrams for:
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| **Frontend** | Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS, Shadcn UI |
-| **Backend** | Next.js API, Supabase (PostgreSQL + Auth), BullMQ (Redis job queue) |
-| **Infrastructure** | Vercel, Upstash Redis, Google Calendar/Tasks APIs |
-| **Testing** | Vitest, Playwright, Chrome MCP, Testing Library |
+| Layer              | Technology                                                             |
+| ------------------ | ---------------------------------------------------------------------- |
+| **Frontend**       | Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS, Shadcn UI |
+| **Backend**        | Next.js API, Supabase (PostgreSQL + Auth), BullMQ (Redis job queue)    |
+| **Infrastructure** | Vercel, Upstash Redis, Google Calendar/Tasks APIs                      |
+| **Testing**        | Vitest, Playwright, Chrome MCP, Testing Library                        |
 
 ---
 
@@ -287,17 +288,20 @@ Focus on [Development Plan Phase 4](docs/02-development-plan.md#phase-4-polish--
 ## Key Resources
 
 ### Documentation
+
 - Start here: [docs/README.md](docs/README.md)
 - Requirements: [docs/01-requirements.md](docs/01-requirements.md)
 - Development Plan: [docs/02-development-plan.md](docs/02-development-plan.md)
 
 ### External APIs
+
 - [Next.js Docs](https://nextjs.org/docs)
 - [Supabase Docs](https://supabase.com/docs)
 - [Google Calendar API](https://developers.google.com/calendar/api)
 - [Google Tasks API](https://developers.google.com/tasks)
 
 ### Testing
+
 - Test Plan: [docs/05-test-plan.md](docs/05-test-plan.md)
 - Manual Testing Agent: [.github/agents/manual-testing/AGENT.md](.github/agents/manual-testing/AGENT.md)
 - Test Fixtures: [tests/fixtures/README.md](tests/fixtures/README.md)
@@ -354,12 +358,14 @@ Refer back to the comprehensive documentation in the `docs/` folder. Everything 
 ## Success Criteria
 
 ### MVP Success (End of Phase 2)
+
 - ✅ User can create and manage 50+ tasks
 - ✅ Tasks automatically scheduled on calendar
 - ✅ Two-way Google sync working
 - ✅ Scheduling handles 100+ tasks in < 5 seconds
 
 ### Production Ready (End of Phase 4)
+
 - ✅ 10 beta users using daily for 2+ weeks
 - ✅ 90%+ satisfaction with auto-scheduling
 - ✅ Zero critical bugs
@@ -370,6 +376,7 @@ Refer back to the comprehensive documentation in the `docs/` folder. Everything 
 ## Let's Build! 🚀
 
 You now have everything you need:
+
 - ✅ Clear requirements
 - ✅ Phased development plan
 - ✅ Complete architecture

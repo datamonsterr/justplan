@@ -75,9 +75,15 @@ export interface ChatMessageState {
 // Manage in action
 toggleMessageEditing: (id, editing) => {
   set(
-    { messageEditingIds: toggleBooleanList(get().messageEditingIds, id, editing) },
+    {
+      messageEditingIds: toggleBooleanList(
+        get().messageEditingIds,
+        id,
+        editing
+      ),
+    },
     false,
-    'toggleMessageEditing',
+    "toggleMessageEditing"
   );
 };
 ```
@@ -107,9 +113,12 @@ refreshMessages: async () => {
 ## Reducer Pattern
 
 ```typescript
-export const messagesReducer = (state: ChatMessage[], payload: MessageDispatch): ChatMessage[] => {
+export const messagesReducer = (
+  state: ChatMessage[],
+  payload: MessageDispatch
+): ChatMessage[] => {
   switch (payload.type) {
-    case 'updateMessage': {
+    case "updateMessage": {
       return produce(state, (draftState) => {
         const index = draftState.findIndex((i) => i.id === payload.id);
         if (index < 0) return;
