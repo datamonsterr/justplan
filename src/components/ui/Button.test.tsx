@@ -9,16 +9,16 @@ describe("Button Component", () => {
     expect(screen.getByText("Click me")).toBeInTheDocument();
   });
 
-  it("should apply primary variant by default", () => {
+  it("should apply default variant by default", () => {
     render(<Button>Primary Button</Button>);
     const button = screen.getByText("Primary Button");
-    expect(button).toHaveClass("bg-blue-500");
+    expect(button).toHaveClass("bg-primary");
   });
 
   it("should apply secondary variant", () => {
     render(<Button variant="secondary">Secondary Button</Button>);
     const button = screen.getByText("Secondary Button");
-    expect(button).toHaveClass("bg-gray-500");
+    expect(button).toHaveClass("bg-secondary");
   });
 
   it("should apply outline variant", () => {
@@ -27,9 +27,9 @@ describe("Button Component", () => {
     expect(button).toHaveClass("border");
   });
 
-  it("should apply medium size by default", () => {
-    render(<Button>Medium Button</Button>);
-    const button = screen.getByText("Medium Button");
+  it("should apply default size by default", () => {
+    render(<Button>Default Button</Button>);
+    const button = screen.getByText("Default Button");
     expect(button).toHaveClass("px-4");
   });
 
@@ -42,7 +42,7 @@ describe("Button Component", () => {
   it("should apply large size", () => {
     render(<Button size="lg">Large Button</Button>);
     const button = screen.getByText("Large Button");
-    expect(button).toHaveClass("px-6");
+    expect(button).toHaveClass("px-8");
   });
 
   it("should handle click events", async () => {
