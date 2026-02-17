@@ -117,13 +117,13 @@ Total: ~5 months to full vision
 node --version  # Should be 18+
 
 # 2. Install dependencies
-npm install
+pnpm install
 
 # 3. Install Supabase CLI
 npm install -g supabase
 
 # 4. Install Playwright
-npx playwright install
+pnpm exec playwright install
 ```
 
 ### Step 2: Create Supabase Project (15 minutes)
@@ -160,10 +160,10 @@ npx create-next-app@latest justplan --typescript --tailwind --app --src-dir
 cd justplan
 
 # Install additional dependencies
-npm install @supabase/supabase-js @supabase/auth-helpers-nextjs
-npm install date-fns zod react-hook-form
-npm install @tanstack/react-query zustand
-npm install bullmq ioredis
+pnpm add @supabase/supabase-js @supabase/auth-helpers-nextjs
+pnpm add date-fns zod react-hook-form
+pnpm add @tanstack/react-query zustand
+pnpm add bullmq ioredis
 ```
 
 ### Step 4: Database Migrations (20 minutes)
@@ -306,6 +306,38 @@ Focus on [Development Plan Phase 4](docs/02-development-plan.md#phase-4-polish--
 - Manual Testing Agent: [.github/agents/manual-testing/AGENT.md](.github/agents/manual-testing/AGENT.md)
 - Test Fixtures: [tests/fixtures/README.md](tests/fixtures/README.md)
 
+### Deployment
+
+- **[Deployment Guide](DEPLOYMENT.md)** - Complete Vercel deployment instructions
+- **Production Ready**: Configured for Vercel with Supabase, Upstash Redis, and Google APIs
+- **Environment Variables**: See `.env.example` and `.env.production.example`
+
+---
+
+## Quick Start - Deploy to Vercel
+
+1. **Push to GitHub**:
+   ```bash
+   git push origin main
+   ```
+
+2. **Import to Vercel**:
+   - Go to [vercel.com/new](https://vercel.com/new)
+   - Import your GitHub repository
+   - Vercel auto-detects Next.js configuration
+
+3. **Add Environment Variables**:
+   - Copy variables from `.env.production.example`
+   - Add to Vercel project settings → Environment Variables
+   - Required: Supabase, Google OAuth, Gemini API, Redis (Upstash)
+
+4. **Deploy**:
+   - Click "Deploy"
+   - Wait 2-3 minutes for build
+   - Your app is live! 🚀
+
+📖 **Full deployment guide**: [DEPLOYMENT.md](DEPLOYMENT.md)
+
 ---
 
 ## Development Commands (Future)
@@ -314,9 +346,9 @@ Once project is set up:
 
 ```bash
 # Development
-npm run dev              # Start dev server
-npm run build            # Build for production
-npm run start            # Start production server
+pnpm dev              # Start dev server
+pnpm build            # Build for production
+pnpm start            # Start production server
 
 # Database
 supabase db reset        # Reset local DB
@@ -324,21 +356,21 @@ supabase db push         # Push migrations to remote
 supabase db diff         # Generate migration from changes
 
 # Testing
-npm run test             # Run unit tests (watch mode)
-npm run test:unit        # Unit tests (single run)
-npm run test:integration # Integration tests
-npm run test:e2e         # E2E tests
-npm run test:all         # All tests
-npm run test:coverage    # Coverage report
+pnpm test             # Run unit tests (watch mode)
+pnpm test:unit        # Unit tests (single run)
+pnpm test:integration # Integration tests
+pnpm test:e2e         # E2E tests
+pnpm test:all         # All tests
+pnpm test:coverage    # Coverage report
 
 # Code Quality
-npm run lint             # ESLint
-npm run format           # Prettier
-npm run type-check       # TypeScript
+pnpm lint             # ESLint
+pnpm format           # Prettier
+pnpm type-check       # TypeScript
 
 # Manual Testing
-npm run agent:manual-testing -- run all
-npm run agent:manual-testing -- smoke
+pnpm agent:manual-testing -- run all
+pnpm agent:manual-testing -- smoke
 ```
 
 ---

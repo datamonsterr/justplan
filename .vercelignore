@@ -1,0 +1,48 @@
+# Vercel Ignore - Files/folders to exclude from deployment
+
+# Development files
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+__tests__/
+tests/
+test-results/
+playwright-report/
+coverage/
+
+# Documentation (optional - remove if you want docs in production)
+docs/
+*.md
+!README.md
+
+# Configuration files (not needed at runtime)
+.vscode/
+.idea/
+.editorconfig
+
+# Local environment
+.env.local
+.env*.local
+
+# Docker files (using Vercel, not Docker)
+Dockerfile
+Dockerfile.dev
+docker-compose.yml
+.dockerignore
+
+# Supabase local
+supabase/.branches/
+supabase/functions/
+supabase/.temp/
+
+# Build artifacts (Vercel rebuilds)
+.next/
+out/
+build/
+dist/
+
+# Git
+.git/
+.gitignore
+.gitattributes

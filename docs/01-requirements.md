@@ -172,9 +172,225 @@ Pre-built templates users can adopt:
 - **Eisenhower Matrix:** Urgent/Important quadrants as states
 - **Kanban-style:** Backlog → Selected → In Progress → Review → Done
 
-### 4. Automatic Scheduling Engine
+### 4. AI-Powered Task Breakdown
 
-#### 4.1 Core Algorithm
+This feature enables users to intelligently decompose complex tasks into manageable subtasks, either manually or with AI assistance.
+
+#### 4.1 Manual Task Breakdown
+
+- **Subtask Creation:** Create nested subtasks under any parent task
+- **Properties Inheritance:**
+  - Deadline: Subtasks inherit parent deadline by default (can override)
+  - Workflow State: Independent state for each subtask
+  - Priority: Can inherit or set independently
+- **Duration Distribution:** Total subtask durations should not exceed parent task duration
+- **Hierarchical View:** 
+  - Expandable/collapsible task tree
+  - Visual indication of parent-child relationships
+  - Progress aggregation (% complete based on subtask completion)
+
+#### 4.2 AI-Powered Breakdown (Gemini Flash)
+
+**User Workflow:**
+
+1. User selects a task to breakdown
+2. User sets maximum time constraint per subtask (e.g., "no subtask longer than 2 hours")
+3. System sends task details to Gemini Flash model:
+   - Task title and description
+   - Estimated total duration
+   - Maximum subtask duration constraint
+   - Current workflow state
+   - User preferences (work patterns, skills)
+4. AI generates suggested subtasks with:
+   - Subtask titles and descriptions
+   - Estimated durations
+   - Suggested order/sequence
+   - Dependencies between subtasks
+5. User reviews and can:
+   - Accept all suggestions
+   - Edit individual subtasks
+   - Remove unwanted subtasks
+   - Adjust durations
+   - Add additional subtasks
+
+**AI Prompt Structure:**
+
+```
+Task: [Title]
+Description: [Full description]
+Total Estimated Duration: [X hours]
+Maximum Subtask Duration: [Y hours]
+Context: [User's work domain, if available]
+
+Break this task into logical subtasks that:
+1. Each take no longer than [Y hours]
+2. Together complete the full task
+3. Can be scheduled independently
+4. Have clear success criteria
+5. Are ordered logically by dependencies
+```
+
+**AI Response Format:**
+
+```json
+{
+  "subtasks": [
+    {
+      "title": "Subtask name",
+      "description": "What needs to be done",
+      "estimated_duration_minutes": 60,
+      "order": 1,
+      "depends_on": [],
+      "rationale": "Why this subtask is necessary"
+    }
+  ],
+  "total_estimated_minutes": 240,
+  "breakdown_strategy": "Explanation of the approach used"
+}
+```
+
+**Fallback Strategy:**
+
+- If AI request fails: Allow manual breakdown only
+- If AI suggests subtasks exceeding total duration: Normalize durations proportionally
+- Rate limiting: Cache AI suggestions, limit to 20 breakdowns per user per day
+
+#### 4.3 Subtask Management
+
+- **Scheduling:** Subtasks can be scheduled independently on calendar
+- **Completion:** 
+  - Completing all subtasks automatically completes parent task
+  - Parent task can be marked complete independent of subtasks (overrides)
+- **State Transitions:** Subtasks follow workflow rules independently
+- **Deletion:** Deleting parent task can optionally delete all subtasks (user choice)
+
+### 5. AI-Powered Auto-Categorization
+
+This feature automatically assigns tasks and subtasks to appropriate workflow states using AI, based on user-defined state descriptions and rules.
+
+#### 5.1 State Configuration
+
+Users must define their workflow states with rich context:
+
+**Required Fields per State:**
+
+- **Name:** State identifier (e.g., "Urgent", "Blocked", "Ready")
+- **Description:** Detailed explanation of what this state means
+  - Example: "Urgent: Tasks with deadlines within 48 hours that require immediate attention"
+- **Categorization Rules:** Natural language conditions
+  - Example: "Tasks should be in this state if they have a deadline within 2 days OR are marked as high priority"
+- **Color:** Visual identifier
+- **Scheduling Behavior:** Auto-schedule tasks in this state? (Yes/No)
+- **Priority Weight:** How important are tasks in this state (1-10)
+
+#### 5.2 Auto-Categorization Engine
+
+**Trigger Conditions:**
+
+- Task creation (categorize new task immediately)
+- Task update (recategorize if relevant fields changed)
+- Bulk re-categorization (user-initiated for all tasks)
+- Scheduled batch processing (daily recategorization of all active tasks)
+
+**AI Categorization Process:**
+
+1. **Gather Context:**
+   - Task title, description, priority, deadline
+   - Current workflow state (if any)
+   - All user-defined states with descriptions and rules
+   - Task history (previous states, duration in each state)
+
+2. **Send to Gemini Flash:**
+
+```
+Analyze this task and determine the most appropriate workflow state.
+
+Task Details:
+- Title: [Task title]
+- Description: [Task description]
+- Priority: [High/Medium/Low]
+- Deadline: [Date/time or None]
+- Estimated Duration: [X hours]
+- Created: [Timestamp]
+- Current State: [State name or null]
+
+Available Workflow States:
+[For each state:]
+  State: [Name]
+  Description: [User's description]
+  Rules: [User's rules]
+  Priority Weight: [1-10]
+
+Based on the task details and state definitions, which state is most appropriate?
+Provide your reasoning.
+```
+
+3. **AI Response Format:**
+
+```json
+{
+  "suggested_state_id": "uuid-of-suggested-state",
+  "suggested_state_name": "Ready",
+  "confidence": 0.95,
+  "reasoning": "This task has a deadline 5 days away with medium priority. According to the 'Ready' state rules, it should be scheduled soon but isn't urgent.",
+  "alternative_states": [
+    {
+      "state_id": "uuid",
+      "state_name": "Backlog",
+      "confidence": 0.60,
+      "reasoning": "Could also be in Backlog since it's not immediately urgent"
+    }
+  ]
+}
+```
+
+4. **User Confirmation (Configurable):**
+   - **Auto-accept high confidence (>90%):** Automatically apply categorization
+   - **Require review for medium confidence (70-90%):** Show suggestion, require user confirmation
+   - **Don't apply low confidence (<70%):** Keep current state, log suggestion for user review
+
+#### 5.3 Categorization Rules Management
+
+**Rule Types:**
+
+- **Time-based:** "If deadline within X days" → State Y
+- **Priority-based:** "If priority is High" → State Y  
+- **Duration-based:** "If estimated duration > X hours" → State Y
+- **Combination:** "If (High priority OR deadline within 2 days) AND duration < 4 hours" → State Y
+- **State Duration:** "If in State X for > Y days" → Transition to State Z
+
+**Rule Priority:**
+
+- Explicit rules (user-defined) take precedence over AI suggestions
+- If multiple rules match, highest priority rule wins
+- AI only suggests when no explicit rule matches
+
+#### 5.4 Learning & Adaptation
+
+**User Override Tracking:**
+
+- Track when users manually change AI-suggested categorization
+- Store: task_id, suggested_state, user_chosen_state, timestamp
+- Use this data to improve future suggestions (Phase 2 feature)
+
+**Batch Re-Review:**
+
+- Weekly/monthly review of all auto-categorized tasks
+- Show accuracy metrics: "AI correctly categorized 85% of tasks"
+- Allow user to provide feedback on incorrect categorizations
+
+#### 5.5 Performance & Cost Control
+
+- **Caching:** Cache AI responses for identical task+state configurations
+- **Batch Processing:** Group multiple tasks into single AI request when possible
+- **Rate Limits:** 
+  - 100 auto-categorizations per user per day
+  - Exceeded limit → fall back to rule-based categorization only
+- **Cost Monitoring:** Track API usage, alert user if approaching limits
+
+### 6. Automatic Scheduling Engine
+
+#### 6.1 Core Algorithm
 
 The scheduler must:
 
@@ -185,6 +401,7 @@ The scheduler must:
    - Current workflow state (Urgent > Ready > Backlog)
    - User-defined priority
    - Task dependencies
+   - Subtask relationships (schedule subtasks before/after parent)
 4. **Optimize packing** to minimize fragmentation
 5. **Leave buffer time** between tasks (configurable)
 

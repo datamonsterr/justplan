@@ -69,7 +69,7 @@ This document outlines the phased development approach for JustPlan, breaking do
 - [ ] Configure environment variables
 - [ ] Set up GitHub repository
 
-**Acceptance:** `npm run dev` starts the application
+**Acceptance:** `pnpm dev` starts the application
 
 #### 0.2 Supabase Configuration
 

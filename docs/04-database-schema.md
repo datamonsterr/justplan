@@ -295,6 +295,7 @@ CREATE TYPE task_priority AS ENUM ('low', 'medium', 'high');
 CREATE TABLE tasks (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    parent_task_id UUID REFERENCES tasks(id) ON DELETE CASCADE, -- For subtasks
     title TEXT NOT NULL,
     description TEXT,
     estimated_duration_minutes INTEGER NOT NULL,
@@ -308,9 +309,17 @@ CREATE TABLE tasks (
     scheduled_end TIMESTAMP WITH TIME ZONE,
     is_pinned BOOLEAN NOT NULL DEFAULT false, -- Manually pinned to specific time
 
+    -- Subtask fields
+    subtask_order INTEGER, -- Order within parent task
+    depends_on_task_id UUID REFERENCES tasks(id) ON DELETE SET NULL, -- Task dependency
+
     -- Google integration
     google_task_id TEXT, -- ID in Google Tasks
     google_calendar_event_id TEXT, -- ID of calendar event for this task
+
+    -- AI breakdown tracking
+    ai_generated BOOLEAN NOT NULL DEFAULT false, -- Was this task/subtask AI-generated?
+    ai_breakdown_cache_key TEXT, -- Cache key for AI breakdown results
 
     -- Metadata (flexible)
     metadata JSONB DEFAULT '{}',
@@ -324,7 +333,8 @@ CREATE TABLE tasks (
     CONSTRAINT valid_scheduled_times CHECK (
         (is_scheduled = false AND scheduled_start IS NULL AND scheduled_end IS NULL) OR
         (is_scheduled = true AND scheduled_start IS NOT NULL AND scheduled_end IS NOT NULL AND scheduled_end > scheduled_start)
-    )
+    ),
+    CONSTRAINT no_self_reference CHECK (id != parent_task_id)
 );
 
 -- Indexes
@@ -334,6 +344,8 @@ CREATE INDEX idx_tasks_deadline ON tasks(deadline) WHERE deadline IS NOT NULL;
 CREATE INDEX idx_tasks_scheduled ON tasks(is_scheduled, scheduled_start) WHERE is_scheduled = true;
 CREATE INDEX idx_tasks_deleted_at ON tasks(deleted_at) WHERE deleted_at IS NULL; -- Active tasks
 CREATE INDEX idx_tasks_google_task_id ON tasks(google_task_id) WHERE google_task_id IS NOT NULL;
+CREATE INDEX idx_tasks_parent_task_id ON tasks(parent_task_id) WHERE parent_task_id IS NOT NULL; -- Subtasks
+CREATE INDEX idx_tasks_depends_on ON tasks(depends_on_task_id) WHERE depends_on_task_id IS NOT NULL; -- Dependencies
 
 -- RLS
 ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
@@ -367,15 +379,19 @@ CREATE TABLE workflow_states (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
+    description TEXT, -- "Bucket" description for AI categorization
+    categorization_rules TEXT, -- Natural language rules for auto-categorization
     color TEXT NOT NULL DEFAULT '#6B7280', -- Hex color
     order INTEGER NOT NULL DEFAULT 0, -- Display order
     is_terminal BOOLEAN NOT NULL DEFAULT false, -- End state (e.g., Done, Cancelled)
     should_auto_schedule BOOLEAN NOT NULL DEFAULT true, -- Include in scheduling?
     scheduling_priority_boost INTEGER NOT NULL DEFAULT 0, -- -10 to +10
+    priority_weight INTEGER NOT NULL DEFAULT 5, -- 1-10 for AI categorization
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
 
     CONSTRAINT unique_user_state_name UNIQUE (user_id, name),
-    CONSTRAINT valid_priority_boost CHECK (scheduling_priority_boost BETWEEN -10 AND 10)
+    CONSTRAINT valid_priority_boost CHECK (scheduling_priority_boost BETWEEN -10 AND 10),
+    CONSTRAINT valid_priority_weight CHECK (priority_weight BETWEEN 1 AND 10)
 );
 
 -- Indexes
@@ -393,14 +409,37 @@ CREATE POLICY "Users can manage own workflow states"
 **Default States Seed Data:**
 
 ```sql
-INSERT INTO workflow_states (user_id, name, color, order, is_terminal, scheduling_priority_boost, should_auto_schedule)
+INSERT INTO workflow_states (user_id, name, description, categorization_rules, color, order, is_terminal, scheduling_priority_boost, priority_weight, should_auto_schedule)
 VALUES
-    ('user-uuid', 'Backlog', '#9CA3AF', 0, false, -5, false),
-    ('user-uuid', 'Ready', '#3B82F6', 1, false, 0, true),
-    ('user-uuid', 'In Progress', '#F59E0B', 2, false, 5, true),
-    ('user-uuid', 'Blocked', '#EF4444', 3, false, -10, false),
-    ('user-uuid', 'Review', '#8B5CF6', 4, false, 3, true),
-    ('user-uuid', 'Done', '#10B981', 5, true, 0, false);
+    ('user-uuid', 'Backlog', 
+     'Tasks that are not yet ready to be worked on. Ideas, future work, or tasks lacking necessary information.',
+     'Tasks with no immediate deadline OR low priority OR missing dependencies',
+     '#9CA3AF', 0, false, -5, 2, false),
+    
+    ('user-uuid', 'Ready', 
+     'Tasks that are ready to be scheduled and worked on. All requirements are met and can be started anytime.',
+     'Tasks with deadline > 2 days AND has all dependencies resolved AND priority >= medium',
+     '#3B82F6', 1, false, 0, 5, true),
+    
+    ('user-uuid', 'In Progress', 
+     'Tasks currently being worked on. Should have scheduled time blocks on the calendar.',
+     'Tasks with scheduled time AND not blocked',
+     '#F59E0B', 2, false, 5, 8, true),
+    
+    ('user-uuid', 'Blocked', 
+     'Tasks that cannot proceed due to external dependencies, waiting for information, or blocked by other issues.',
+     'Tasks waiting for external input OR missing resources OR dependent on incomplete tasks',
+     '#EF4444', 3, false, -10, 1, false),
+    
+    ('user-uuid', 'Review', 
+     'Work is complete and awaiting review, validation, or approval before being marked as done.',
+     'Tasks marked complete but requiring review OR approval',
+     '#8B5CF6', 4, false, 3, 6, true),
+    
+    ('user-uuid', 'Done', 
+     'Completed tasks. No further action required.',
+     'Tasks completed AND approved',
+     '#10B981', 5, true, 0, 10, false);
 ```
 
 ---
@@ -583,6 +622,150 @@ CREATE POLICY "Users can view own scheduling history"
     ON scheduling_history FOR SELECT
     USING (auth.uid() = user_id);
 ```
+
+---
+
+### 10. ai_breakdown_cache
+
+Cache AI-generated task breakdown results for performance and cost optimization.
+
+```sql
+CREATE TABLE ai_breakdown_cache (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    cache_key TEXT NOT NULL, -- Hash of task details + max_subtask_duration
+    task_title TEXT NOT NULL,
+    task_description TEXT,
+    estimated_duration_minutes INTEGER NOT NULL,
+    max_subtask_duration_minutes INTEGER NOT NULL,
+    ai_response JSONB NOT NULL, -- Full AI response with subtasks
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    expires_at TIMESTAMP WITH TIME ZONE DEFAULT (NOW() + INTERVAL '24 hours'),
+
+    CONSTRAINT unique_cache_key UNIQUE (user_id, cache_key)
+);
+
+-- Indexes
+CREATE INDEX idx_ai_breakdown_cache_user_id ON ai_breakdown_cache(user_id);
+CREATE INDEX idx_ai_breakdown_cache_expires_at ON ai_breakdown_cache(expires_at);
+CREATE INDEX idx_ai_breakdown_cache_key ON ai_breakdown_cache(cache_key);
+
+-- RLS
+ALTER TABLE ai_breakdown_cache ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can manage own AI cache"
+    ON ai_breakdown_cache
+    USING (auth.uid() = user_id);
+```
+
+**Cache Key Generation:**
+
+```typescript
+// Example cache key: SHA256(title + description + duration + max_subtask)
+const cacheKey = crypto
+  .createHash('sha256')
+  .update(`${title}|${description}|${duration}|${maxSubtask}`)
+  .digest('hex');
+```
+
+---
+
+### 11. ai_categorization_history
+
+Track AI categorization decisions for learning and user feedback.
+
+```sql
+CREATE TABLE ai_categorization_history (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    task_id UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+    suggested_state_id UUID NOT NULL REFERENCES workflow_states(id) ON DELETE CASCADE,
+    confidence NUMERIC(3, 2) NOT NULL, -- 0.00 to 1.00
+    reasoning TEXT,
+    was_accepted BOOLEAN, -- NULL = pending, true = accepted, false = rejected
+    user_chosen_state_id UUID REFERENCES workflow_states(id) ON DELETE SET NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+
+    CONSTRAINT valid_confidence CHECK (confidence BETWEEN 0 AND 1)
+);
+
+-- Indexes
+CREATE INDEX idx_ai_categorization_user_id ON ai_categorization_history(user_id);
+CREATE INDEX idx_ai_categorization_task_id ON ai_categorization_history(task_id);
+CREATE INDEX idx_ai_categorization_created_at ON ai_categorization_history(created_at);
+CREATE INDEX idx_ai_categorization_pending ON ai_categorization_history(was_accepted) WHERE was_accepted IS NULL;
+
+-- RLS
+ALTER TABLE ai_categorization_history ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own categorization history"
+    ON ai_categorization_history FOR SELECT
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own categorization history"
+    ON ai_categorization_history FOR UPDATE
+    USING (auth.uid() = user_id);
+```
+
+**Usage Example:**
+
+```sql
+-- Log AI suggestion
+INSERT INTO ai_categorization_history (user_id, task_id, suggested_state_id, confidence, reasoning)
+VALUES ('user-uuid', 'task-uuid', 'state-uuid', 0.92, 'Task has high priority and deadline within 48 hours');
+
+-- User accepts suggestion
+UPDATE ai_categorization_history
+SET was_accepted = true
+WHERE id = 'history-uuid';
+
+-- User rejects and chooses different state
+UPDATE ai_categorization_history
+SET was_accepted = false, user_chosen_state_id = 'other-state-uuid'
+WHERE id = 'history-uuid';
+```
+
+---
+
+### 12. ai_usage_quota
+
+Track AI API usage per user for rate limiting and cost management.
+
+```sql
+CREATE TABLE ai_usage_quota (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    date DATE NOT NULL DEFAULT CURRENT_DATE,
+    breakdown_count INTEGER NOT NULL DEFAULT 0,
+    categorization_count INTEGER NOT NULL DEFAULT 0,
+    total_tokens_used INTEGER NOT NULL DEFAULT 0,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+
+    CONSTRAINT unique_user_date UNIQUE (user_id, date),
+    CONSTRAINT non_negative_counts CHECK (
+        breakdown_count >= 0 AND 
+        categorization_count >= 0 AND 
+        total_tokens_used >= 0
+    )
+);
+
+-- Indexes
+CREATE INDEX idx_ai_usage_quota_user_id ON ai_usage_quota(user_id);
+CREATE INDEX idx_ai_usage_quota_date ON ai_usage_quota(date);
+
+-- RLS
+ALTER TABLE ai_usage_quota ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own AI quota"
+    ON ai_usage_quota FOR SELECT
+    USING (auth.uid() = user_id);
+```
+
+**Daily Limits:**
+
+- Task breakdowns: 50 per user per day
+- Auto-categorizations: 100 per user per day
+- Enforced at application layer before making AI requests
 
 ---
 

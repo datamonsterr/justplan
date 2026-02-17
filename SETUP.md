@@ -92,7 +92,7 @@ npx supabase start
 ### 4. Start Development Server
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 Visit [http://localhost:3000](http://localhost:3000)
@@ -166,24 +166,24 @@ justplan/
 
 ```bash
 # Development
-npm run dev              # Start dev server (http://localhost:3000)
-npm run build            # Build for production
-npm run start            # Start production server
-npm run lint             # Run ESLint
-npm run format           # Format code with Prettier
-npm run type-check       # TypeScript type checking
+pnpm dev              # Start dev server (http://localhost:3000)
+pnpm build            # Build for production
+pnpm start            # Start production server
+pnpm lint             # Run ESLint
+pnpm format           # Format code with Prettier
+pnpm type-check       # TypeScript type checking
 
 # Testing
-npm run test             # Run tests in watch mode
-npm run test:unit        # Run unit tests
-npm run test:integration # Run integration tests
-npm run test:e2e         # Run E2E tests (Playwright)
-npm run test:coverage    # Generate coverage report
+pnpm test             # Run tests in watch mode
+pnpm test:unit        # Run unit tests
+pnpm test:integration # Run integration tests
+pnpm test:e2e         # Run E2E tests (Playwright)
+pnpm test:coverage    # Generate coverage report
 
-# Database (Supabase)
-npm run supabase:start   # Start local Supabase
-npm run supabase:stop    # Stop local Supabase
-npm run supabase:reset   # Reset local database
+# Supabase
+pnpm supabase:start   # Start local Supabase
+pnpm supabase:stop    # Stop local Supabase
+pnpm supabase:reset   # Reset local database
 npm run supabase:push    # Push migrations to remote
 npm run supabase:diff    # Generate migration from changes
 
