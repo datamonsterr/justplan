@@ -150,7 +150,7 @@ export function AICopilotSidebar() {
                 </div>
               )}
 
-              <span className="text-[9px] text-muted-foreground">
+              <span className="text-[9px] text-muted-foreground" suppressHydrationWarning>
                 {message.timestamp.toLocaleTimeString([], {
                   hour: "2-digit",
                   minute: "2-digit",

@@ -118,6 +118,7 @@ function TimeBlockComponent({ block, onClick }: { block: TimeBlock; onClick: () 
 export function CalendarView({ onTaskSelect }: CalendarViewProps) {
   const [currentDate, setCurrentDate] = React.useState(new Date());
   const [view, setView] = React.useState<"day" | "week" | "month">("week");
+  const [today] = React.useState(() => new Date().toDateString());
 
   const hours = Array.from({ length: 24 }, (_, i) => i);
 
@@ -186,9 +187,9 @@ export function CalendarView({ onTaskSelect }: CalendarViewProps) {
   };
 
   return (
-    <div className="flex h-full flex-col bg-background">
+    <div className="flex h-full w-full flex-col overflow-hidden bg-background">
       {/* Calendar Header */}
-      <div className="flex items-center justify-between border-b px-3 py-2">
+      <div className="shrink-0 flex items-center justify-between border-b px-3 py-2">
         <div className="flex items-center gap-2">
           <Button variant="outline" size="icon-sm" onClick={() => navigateDate("prev")}>
             <ChevronLeft className="h-3.5 w-3.5" />
@@ -225,7 +226,7 @@ export function CalendarView({ onTaskSelect }: CalendarViewProps) {
       </div>
 
       {/* Calendar Grid */}
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 min-h-0">
         {view === "day" ? (
           // Day View
           <div className="relative">
@@ -276,9 +277,9 @@ export function CalendarView({ onTaskSelect }: CalendarViewProps) {
           </div>
         ) : view === "week" ? (
           // Week View
-          <div className="flex">
+          <div className="flex min-w-0 w-full">
             {/* Time labels */}
-            <div className="sticky left-0 z-10 w-16 border-r bg-muted/50">
+            <div className="sticky left-0 z-10 w-16 shrink-0 border-r bg-muted/50">
               {hours.map((hour) => (
                 <div
                   key={hour}
@@ -292,13 +293,13 @@ export function CalendarView({ onTaskSelect }: CalendarViewProps) {
             </div>
 
             {/* Week columns */}
-            <div className="flex flex-1">
+            <div className="flex flex-1 min-w-0">
               {weekDates.map((date, index) => {
-                const isToday = date.toDateString() === new Date().toDateString();
+                const isToday = date.toDateString() === today;
                 const blocksForDay = getBlocksForDate(date);
                 
                 return (
-                  <div key={index} className="flex-1 border-r last:border-r-0">
+                  <div key={index} className="flex-1 min-w-0 border-r last:border-r-0">
                     {/* Day header - make it sticky within scrollarea */}
                     <div className={cn(
                       "sticky top-0 z-20 border-b bg-muted/50 px-2 py-1 text-center",
