@@ -272,7 +272,6 @@ pnpm test
 ### Deployment
 
 **Use these skills:**
-- `docker-expert` - If using Docker (not for Vercel)
 - `best-practices` - Security, performance
 
 **Patterns:**
@@ -280,6 +279,7 @@ pnpm test
 - Environment variables in `.env.example` and `.env.production.example`
 - Vercel-specific configs in `vercel.json`
 - Never split deployment docs into multiple files
+- Use Upstash Redis for production (seamless Vercel integration)
 
 ---
 
@@ -391,10 +391,23 @@ import { formatDate } from './utils';
 
 ### Redis (Upstash)
 
-- **Queue**: BullMQ for background jobs
-- **Connection**: `REDIS_URL` environment variable
-- **Workers**: `src/workers/`
-- **Jobs**: Scheduling, sync operations
+- **REST Client**: `@upstash/redis` for all app code (serverless-friendly)
+- **Environment**: `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`
+- **Usage**: `import { redis } from '@/lib/redis'`
+- **BullMQ**: Uses TCP connection (`REDIS_URL`) for background job queues
+- **Workers**: `src/workers/` (optional, for Phase 2 scheduling)
+
+**Patterns:**
+```typescript
+// Direct Redis operations (REST API)
+import { redis } from '@/lib/redis';
+await redis.set('key', 'value');
+const result = await redis.get('key');
+
+// Background jobs (TCP via BullMQ)
+import { schedulingQueue } from '@/lib/redis';
+await schedulingQueue.add('job-name', { data: 'value' });
+```
 
 ---
 
@@ -491,14 +504,26 @@ log('Creating task %o', taskData);
 **Local Development** (`.env.local`):
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321
-NEXT_PUBLIC_SUPABASE_ANON_KEY=local-anon-key
-SUPABASE_SERVICE_ROLE_KEY=local-service-key
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=local-publishable-key
+SUPABASE_SECRET_KEY=local-secret-key
 GOOGLE_CLIENT_ID=xxx
 GOOGLE_CLIENT_SECRET=xxx
 GEMINI_API_KEY=xxx
-REDIS_URL=redis://localhost:6379
+
+# Upstash Redis REST API (serverless-friendly)
+UPSTASH_REDIS_REST_URL=https://your-region.upstash.io
+UPSTASH_REDIS_REST_TOKEN=your-rest-token
+
+# Redis TCP URL (optional, only for BullMQ workers)
+REDIS_URL=rediss://default:password@your-region.upstash.io:6380
+
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 NODE_ENV=development
+```
+
+**Note:** For local Supabase, you can still use the JWT-based anon/service_role keys if running `supabase start`. For hosted Supabase projects, use the new Publishable Key and Secret Key from the [API Keys settings](https://supabase.com/dashboard/project/_/settings/api-keys).
+
+**Upstash Redis:** REST API is preferred for all serverless Redis operations. TCP URL (`REDIS_URL`) is only needed if you're running BullMQ workers for background jobs.
 ```
 
 **Production** (Vercel Environment Variables):

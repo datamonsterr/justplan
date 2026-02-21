@@ -132,15 +132,17 @@ pnpm exec playwright install
 2. Create new project: "justplan-dev"
 3. Save credentials:
    - Project URL
-   - Anon key
-   - Service role key
+   - Project URL
+   - Publishable key (sb_publishable_xxx)
+   - Secret key (sb_secret_xxx)
+   - **Note:** Get these from Settings → API Keys (not the legacy anon/service_role keys)
 4. Create `.env.local`:
 
 ```bash
-# Supabase
+# Supabase (use new key format from API Keys tab)
 NEXT_PUBLIC_SUPABASE_URL=your-project-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
+SUPABASE_SECRET_KEY=your-secret-key
 
 # Google OAuth (create in Google Cloud Console)
 GOOGLE_CLIENT_ID=your-client-id

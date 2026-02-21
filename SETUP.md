@@ -10,7 +10,6 @@ Your development environment is ready. Follow these steps to start developing.
 
 ✅ **Next.js 14** with TypeScript, App Router, and Tailwind CSS  
 ✅ **Git Repository** initialized (ready for remote)  
-✅ **Docker** configuration (development & production)  
 ✅ **Supabase** migrations and client setup  
 ✅ **Complete folder structure** for the project  
 ✅ **All dependencies** installed
@@ -30,17 +29,21 @@ cp .env.example .env.local
 Then edit `.env.local` with your credentials:
 
 ```env
-# Get these from https://supabase.com/dashboard
+# Get these from https://supabase.com/dashboard/project/_/settings/api-keys
+# Use the new Publishable Key (sb_publishable_xxx) and Secret Key (sb_secret_xxx)
 NEXT_PUBLIC_SUPABASE_URL=your-project-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
+SUPABASE_SECRET_KEY=your-secret-key
 
 # Get these from Google Cloud Console
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 
-# For local development (Redis)
+# Redis - Use Upstash (https://console.upstash.com)
+# For local dev, you can also install Redis: brew install redis (Mac) or apt install redis (Linux)
 REDIS_URL=redis://localhost:6379
+# Or use Upstash Redis URL:
+# REDIS_URL=rediss://default:xxx@xxx.upstash.io:6380
 
 # App URL
 NEXT_PUBLIC_APP_URL=http://localhost:3000
@@ -66,8 +69,11 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 #### Option B: Use Local Supabase (For offline development)
 
 ```bash
-# Start local Supabase (requires Docker)
-npx supabase start
+# Install Supabase CLI
+pnpm install -g supabase
+
+# Start local Supabase
+supabase start
 
 # Note the credentials and add to .env.local
 # API URL: http://localhost:54321
@@ -75,7 +81,37 @@ npx supabase start
 # Service role key: (will be printed on start)
 ```
 
-### 3. Set Up Google OAuth
+### 3. Set Up Redis (for Job Queue)
+
+### 3. Set Up Redis (Upstash)
+
+**Use Upstash Redis REST API**
+
+1. Go to [console.upstash.com](https://console.upstash.com)
+2. Create account (free tier: 10,000 requests/day)
+3. Click "Create Database" → Choose region closest to your Vercel region
+4. Get your credentials:
+   - Go to **REST API** tab → Copy `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`
+   - (Optional) Go to **Connect** tab → Copy `REDIS_URL` if you plan to use BullMQ workers
+
+5. Add to `.env.local`:
+   ```bash
+   # REST API (for all serverless Redis operations)
+   UPSTASH_REDIS_REST_URL=https://your-region.upstash.io
+   UPSTASH_REDIS_REST_TOKEN=your-rest-token
+   
+   # TCP URL (optional, only for BullMQ workers)
+   REDIS_URL=rediss://default:password@your-region.upstash.io:6380
+   ```
+
+**Why REST API?**
+- ✅ Works perfectly in Vercel Edge Functions and serverless
+- ✅ No TCP connection management issues
+- ✅ Faster cold starts
+- ✅ Browser-compatible (can use in client-side code if needed)
+- ✅ Built-in connection pooling
+
+### 4. Set Up Google OAuth
 
 1. Go to [Google Cloud Console](https://console.cloud.google.com)
 2. Create a new project or select existing
@@ -99,33 +135,13 @@ Visit [http://localhost:3000](http://localhost:3000)
 
 ---
 
-## 🐳 Docker Development
-
-### Using Docker Compose (includes Redis)
+## � Start Development
 
 ```bash
-# Start all services
-docker-compose up
-
-# Start in detached mode
-docker-compose up -d
-
-# View logs
-docker-compose logs -f app
-
-# Stop services
-docker-compose down
+pnpm dev
 ```
 
-### Using Docker directly
-
-```bash
-# Build development image
-docker build -f Dockerfile.dev -t justplan-dev .
-
-# Run container
-docker run -p 3000:3000 --env-file .env.local justplan-dev
-```
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
@@ -186,10 +202,6 @@ pnpm supabase:stop    # Stop local Supabase
 pnpm supabase:reset   # Reset local database
 npm run supabase:push    # Push migrations to remote
 npm run supabase:diff    # Generate migration from changes
-
-# Docker
-docker-compose up        # Start all services
-docker-compose down      # Stop all services
 ```
 
 ---
@@ -201,11 +213,11 @@ docker-compose down      # Stop all services
 1. **Start services:**
 
    ```bash
-   # Option 1: Local (requires Redis installed)
-   npm run dev
-
-   # Option 2: Docker
-   docker-compose up
+   # Start Next.js dev server
+   pnpm dev
+   
+   # If using local Redis (optional, start in separate terminal)
+   redis-server
    ```
 
 2. **Watch for changes:**

@@ -1,3 +1,6 @@
+# A string used to distinguish different Supabase projects on the same host.
+project_id = "dmgswtptlwckpdsaqioj"
+
 # The local database URL is accessed through the API, so it needs to be http://127.0.0.1:54321.
 api.enabled = true
 api.port = 54321
@@ -19,7 +22,6 @@ max_client_conn = 100
 
 [realtime]
 enabled = true
-port = 54323
 
 [studio]
 enabled = true
@@ -49,3 +51,5 @@ enable_confirmations = false
 
 [auth.external.google]
 enabled = true
+client_id = "env(GOOGLE_CLIENT_ID)"
+secret = "env(GOOGLE_CLIENT_SECRET)"

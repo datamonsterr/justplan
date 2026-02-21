@@ -58,14 +58,17 @@ In the Vercel project settings, add these environment variables:
 #### Supabase
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
+SUPABASE_SECRET_KEY=your-secret-key
 ```
 
 **Where to find:**
 - Go to [Supabase Dashboard](https://app.supabase.com)
-- Select your project → Settings → API
-- Copy URL and keys
+- Select your project → Settings → API Keys
+- Use the new **Publishable Key** (sb_publishable_xxx) and **Secret Key** (sb_secret_xxx)
+- If you don't have these keys yet, click "Create new API Keys"
+
+**Note:** The legacy `anon` and `service_role` JWT-based keys still work but are deprecated. Use the new key format for better security and easier rotation.
 
 #### Google OAuth
 ```bash
@@ -94,6 +97,14 @@ GEMINI_API_KEY=your-gemini-api-key
 - Copy the key
 
 #### Redis (Upstash)
+
+**Primary: REST API (for serverless)**
+```bash
+UPSTASH_REDIS_REST_URL=https://your-region.upstash.io
+UPSTASH_REDIS_REST_TOKEN=your-rest-token
+```
+
+**Optional: TCP URL (only if using BullMQ workers)**
 ```bash
 REDIS_URL=rediss://default:password@region.upstash.io:6380
 ```
@@ -102,7 +113,8 @@ REDIS_URL=rediss://default:password@region.upstash.io:6380
 1. Go to [Upstash Console](https://console.upstash.com)
 2. Create new Redis database
 3. Select region close to your Vercel deployment (e.g., us-east-1)
-4. Copy the connection string (TLS enabled)
+4. Go to **REST API** tab → Copy `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`
+5. (Optional) Go to **Connect** tab → Copy TCP `REDIS_URL` if you need BullMQ workers
 
 #### App Configuration
 ```bash
@@ -220,8 +232,8 @@ NEXT_PUBLIC_GOOGLE_REDIRECT_URI=https://your-actual-url.vercel.app/auth/callback
 
 ### Development
 - Local development with `.env.local`
-- Use local Supabase (Docker)
-- Use local Redis
+- Use Supabase CLI or cloud instance
+- Use Upstash Redis (recommended) or local Redis
 
 ---
 
