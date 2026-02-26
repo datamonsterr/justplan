@@ -23,10 +23,10 @@ Your development environment is ready. Follow these steps to start developing.
 Copy the example env file and fill in your credentials:
 
 ```bash
-cp .env.example .env.local
+cp .env.example .env
 ```
 
-Then edit `.env.local` with your credentials:
+Then edit `.env` with your credentials:
 
 ```env
 # Get these from https://supabase.com/dashboard/project/_/settings/api-keys
@@ -58,8 +58,8 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 3. Wait for database provisioning (~2 minutes)
 4. Get your credentials:
    - Go to Settings → API
-   - Copy `Project URL` and `anon public` key to `.env.local`
-   - Copy `service_role` key to `.env.local`
+   - Copy `Project URL` and `anon public` key to `.env`
+   - Copy `service_role` key to `.env`
 5. Apply migrations:
    ```bash
    npx supabase link --project-ref your-project-ref
@@ -75,7 +75,7 @@ pnpm install -g supabase
 # Start local Supabase
 supabase start
 
-# Note the credentials and add to .env.local
+# Note the credentials and add to .env
 # API URL: http://localhost:54321
 # Anon key: (will be printed on start)
 # Service role key: (will be printed on start)
@@ -94,7 +94,7 @@ supabase start
    - Go to **REST API** tab → Copy `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`
    - (Optional) Go to **Connect** tab → Copy `REDIS_URL` if you plan to use BullMQ workers
 
-5. Add to `.env.local`:
+5. Add to `.env`:
    ```bash
    # REST API (for all serverless Redis operations)
    UPSTASH_REDIS_REST_URL=https://your-region.upstash.io
@@ -123,7 +123,7 @@ supabase start
    - Authorized redirect URIs:
      - `http://localhost:3000/auth/callback`
      - `https://your-production-domain/auth/callback`
-5. Copy Client ID and Secret to `.env.local`
+5. Copy Client ID and Secret to `.env`
 
 ### 4. Start Development Server
 
@@ -370,7 +370,7 @@ git remote -v
 
 Before starting development, verify:
 
-- [ ] `.env.local` file exists with all credentials
+- [ ] `.env` file exists with all credentials
 - [ ] Supabase project created and migrations applied
 - [ ] Google OAuth credentials configured
 - [ ] `npm run dev` starts successfully

@@ -110,3 +110,428 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Clerk Theme Overrides - Light Mode */
+.clerk-card {
+  background-color: hsl(var(--card)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
+}
+
+.clerk-header-title {
+  color: hsl(var(--foreground)) !important;
+}
+
+.clerk-header-subtitle {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.clerk-social-button {
+  background-color: hsl(var(--secondary)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  color: hsl(var(--secondary-foreground)) !important;
+}
+
+.clerk-social-button:hover {
+  background-color: hsl(var(--accent)) !important;
+}
+
+.clerk-social-button-text {
+  color: hsl(var(--foreground)) !important;
+  font-weight: 500 !important;
+}
+
+.clerk-divider {
+  background-color: hsl(var(--border)) !important;
+}
+
+.clerk-divider-text {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.clerk-label {
+  color: hsl(var(--foreground)) !important;
+}
+
+.clerk-input {
+  background-color: hsl(var(--input)) !important;
+  border-color: hsl(var(--border)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+.clerk-input::placeholder {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.clerk-input:focus {
+  border-color: hsl(var(--ring)) !important;
+  box-shadow: 0 0 0 2px hsl(var(--ring) / 0.2) !important;
+}
+
+.clerk-input-group {
+  border-color: hsl(var(--border)) !important;
+}
+
+.clerk-button-primary {
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+}
+
+.clerk-button-primary:hover {
+  background-color: hsl(var(--primary) / 0.9) !important;
+}
+
+.clerk-link {
+  color: hsl(var(--primary)) !important;
+}
+
+.clerk-link:hover {
+  color: hsl(var(--primary) / 0.8) !important;
+}
+
+.clerk-text {
+  color: hsl(var(--foreground)) !important;
+}
+
+.clerk-text-secondary {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.clerk-icon-button {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.clerk-icon-button:hover {
+  color: hsl(var(--foreground)) !important;
+}
+
+.clerk-alert {
+  background-color: hsl(var(--destructive) / 0.1) !important;
+  border-color: hsl(var(--destructive) / 0.2) !important;
+}
+
+.clerk-alert-text {
+  color: hsl(var(--destructive)) !important;
+}
+
+.clerk-avatar {
+  border-color: hsl(var(--border)) !important;
+}
+
+.clerk-popover {
+  background-color: hsl(var(--popover)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+}
+
+.clerk-popover-button {
+  color: hsl(var(--foreground)) !important;
+}
+
+.clerk-popover-button:hover {
+  background-color: hsl(var(--accent)) !important;
+}
+
+.clerk-popover-button-text {
+  color: hsl(var(--foreground)) !important;
+}
+
+.clerk-popover-footer {
+  border-top: 1px solid hsl(var(--border)) !important;
+}
+
+.clerk-modal {
+  background-color: hsl(var(--background)) !important;
+}
+
+.clerk-modal-close {
+  color: hsl(var(--foreground)) !important;
+}
+
+.clerk-modal-close:hover {
+  background-color: hsl(var(--accent)) !important;
+}
+
+.clerk-otp-input {
+  background-color: hsl(var(--input)) !important;
+  border-color: hsl(var(--border)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+.clerk-select {
+  background-color: hsl(var(--input)) !important;
+  border-color: hsl(var(--border)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+.clerk-select-options {
+  background-color: hsl(var(--popover)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.clerk-select-option {
+  color: hsl(var(--foreground)) !important;
+}
+
+.clerk-select-option:hover {
+  background-color: hsl(var(--accent)) !important;
+}
+
+.clerk-badge {
+  background-color: hsl(var(--secondary)) !important;
+  color: hsl(var(--secondary-foreground)) !important;
+}
+
+.clerk-section-title {
+  color: hsl(var(--foreground)) !important;
+}
+
+.clerk-accordion-trigger {
+  color: hsl(var(--foreground)) !important;
+}
+
+.clerk-accordion-trigger:hover {
+  background-color: hsl(var(--accent)) !important;
+}
+
+.clerk-navbar-button {
+  color: hsl(var(--foreground)) !important;
+}
+
+.clerk-navbar-button:hover {
+  background-color: hsl(var(--accent)) !important;
+}
+
+.clerk-navbar-icon {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.clerk-breadcrumbs {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.clerk-breadcrumbs-item {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.clerk-breadcrumbs-item:hover {
+  color: hsl(var(--foreground)) !important;
+}
+
+.clerk-breadcrumbs-divider {
+  color: hsl(var(--border)) !important;
+}
+
+/* Override Clerk's internal background colors */
+.cl-internal-b3fm6y {
+  background-color: hsl(var(--card)) !important;
+}
+
+.cl-internal-1dauvt {
+  background-color: hsl(var(--input)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+/* Clerk UserButton dropdown styling */
+[data-clerk-component] {
+  --clerk-background: hsl(var(--background));
+  --clerk-surface: hsl(var(--card));
+  --clerk-border: hsl(var(--border));
+  --clerk-text: hsl(var(--foreground));
+  --clerk-text-secondary: hsl(var(--muted-foreground));
+}
+
+/* Clerk UserButton Popover - Make it SOLID */
+.cl-userButtonPopoverCard,
+.cl-userButtonPopoverMain,
+.cl-userButtonPopoverActions,
+.cl-userButtonPopoverFooter,
+[class*="cl-userButtonPopover"] {
+  background-color: hsl(var(--card)) !important;
+  background: hsl(var(--card)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.cl-userButtonPopoverCard {
+  border: 1px solid hsl(var(--border)) !important;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.2) !important;
+}
+
+.cl-userButtonPopoverActionButton {
+  background-color: transparent !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+.cl-userButtonPopoverActionButton:hover {
+  background-color: hsl(var(--accent)) !important;
+}
+
+.cl-userButtonPopoverActionButtonText {
+  color: hsl(var(--foreground)) !important;
+}
+
+.cl-userButtonPopoverActionButtonIcon {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.cl-userPreview {
+  background-color: hsl(var(--card)) !important;
+}
+
+.cl-userPreviewMainIdentifier {
+  color: hsl(var(--foreground)) !important;
+}
+
+.cl-userPreviewSecondaryIdentifier {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+/* Clerk Footer - "Don't have an account?" section */
+.cl-footer,
+.cl-footerAction,
+.cl-footerActionText,
+.cl-footerActionLink,
+[class*="cl-footer"] {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.cl-footerActionLink {
+  color: hsl(var(--primary)) !important;
+}
+
+.cl-footerActionLink:hover {
+  color: hsl(var(--primary) / 0.8) !important;
+}
+
+/* Clerk card footer background fix */
+.cl-card > footer,
+.cl-cardBox > footer,
+[class*="cl-card"] > footer {
+  background-color: hsl(var(--card)) !important;
+  border-top-color: hsl(var(--border)) !important;
+}
+
+/* Hide Development mode badge */
+.cl-internal-b3fm6y + div,
+[class*="cl-footerPages"],
+.cl-footerPages,
+.cl-footer > div:last-child:not(.cl-footerAction),
+[class*="developmentMode"],
+[class*="DevMode"],
+a[href*="clerk.com"] {
+  display: none !important;
+}
+
+/* Fix any remaining light backgrounds in Clerk components */
+[class*="cl-"] {
+  --cl-chassis-bottom-background: hsl(var(--card)) !important;
+  --cl-chassis-top-background: hsl(var(--card)) !important;
+}
+
+/* Ensure footer text is visible */
+.cl-footerAction__signUp,
+.cl-footerAction__signIn {
+  background-color: hsl(var(--card)) !important;
+}
+
+.cl-footerAction__signUp span,
+.cl-footerAction__signIn span {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+/* Fix white square corners - Clerk decorative elements */
+.cl-card::before,
+.cl-card::after,
+.cl-cardBox::before,
+.cl-cardBox::after,
+[class*="cl-card"]::before,
+[class*="cl-card"]::after,
+.cl-rootBox::before,
+.cl-rootBox::after,
+[class*="cl-rootBox"]::before,
+[class*="cl-rootBox"]::after {
+  display: none !important;
+  background: transparent !important;
+}
+
+/* Override Clerk's decorative corner squares */
+.cl-internal-17kqfsc,
+.cl-internal-1hp5nqm,
+.cl-internal-nfc6jh,
+.cl-internal-2b7gdj,
+[class*="cl-internal-"] {
+  background-color: transparent !important;
+}
+
+/* Remove any white box shadows or decorations */
+.cl-card,
+.cl-cardBox,
+[class*="cl-card"] {
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.2) !important;
+}
+
+/* Clerk main container - remove decorative elements */
+.cl-signIn-root,
+.cl-signUp-root,
+[class*="cl-signIn"],
+[class*="cl-signUp"] {
+  background-color: transparent !important;
+}
+
+/* Target specific Clerk decorative squares */
+div[style*="position: absolute"][style*="background"] {
+  background: transparent !important;
+}
+
+/* Fix Clerk's absolute positioned decorative elements */
+.cl-main > div:first-child,
+.cl-rootBox > div:not(.cl-card):not(.cl-cardBox) {
+  background: transparent !important;
+}
+
+/* Force hide ALL white backgrounds in Clerk components */
+[class^="cl-"] > div,
+[class*=" cl-"] > div {
+  background-color: inherit !important;
+}
+
+/* Specific fix for Clerk's corner decoration boxes */
+.cl-card > div:not([class]),
+.cl-cardBox > div:not([class]),
+div[class=""] {
+  display: none !important;
+}
+
+/* Target Clerk's SVG decorations and shapes */
+.cl-card svg[class*="cl-"],
+.cl-cardBox svg[class*="cl-"] {
+  display: none !important;
+}
+
+/* Override white backgrounds on all internal elements */
+[class*="cl-internal-"]:not([class*="input"]):not([class*="button"]):not([class*="text"]) {
+  background-color: transparent !important;
+  background: transparent !important;
+}
+
+/* Hide Clerk's branding/corner decorations specifically */
+.cl-logoBox,
+.cl-logoImage,
+[class*="cl-logo"],
+.cl-poweredBy,
+[class*="poweredBy"] {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Ensure the card itself has no white leaking out */
+.clerk-card {
+  overflow: hidden !important;
+  background-color: hsl(var(--card)) !important;
+}
+
+/* Remove any absolute positioned white boxes */
+.cl-card > *:not(.cl-header):not(.cl-main):not(.cl-footer):not(main):not(header):not(footer),
+.cl-cardBox > *:not(.cl-header):not(.cl-main):not(.cl-footer):not(main):not(header):not(footer) {
+  background: transparent !important;
+}

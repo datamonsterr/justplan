@@ -22,7 +22,7 @@ This directory contains Redis client and BullMQ queue/worker configurations opti
 
 ### 1. Environment Variables
 
-**Development (`.env.local`) and Production:**
+**Development (`.env`) and Production:**
 
 ```bash
 # Upstash Redis REST API (for all app code)
@@ -346,7 +346,7 @@ export async function GET() {
 ### Connection Errors
 
 **Error: `REDIS_URL not set`**
-- Ensure environment variable is set in `.env.local` or Vercel
+- Ensure environment variable is set in `.env` or Vercel
 
 **Error: `Connection timeout`**
 - Check if Redis URL is correct

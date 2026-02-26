@@ -231,7 +231,7 @@ NEXT_PUBLIC_GOOGLE_REDIRECT_URI=https://your-actual-url.vercel.app/auth/callback
 - Can use separate environment variables
 
 ### Development
-- Local development with `.env.local`
+- Local development with `.env`
 - Use Supabase CLI or cloud instance
 - Use Upstash Redis (recommended) or local Redis
 

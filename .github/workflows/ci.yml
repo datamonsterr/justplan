@@ -106,9 +106,9 @@ jobs:
       
       - name: Create dummy .env for build
         run: |
-          echo "NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321" > .env.local
-          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=dummy-key-for-build" >> .env.local
-          echo "SUPABASE_SERVICE_ROLE_KEY=dummy-key-for-build" >> .env.local
+          echo "NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321" > .env
+          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=dummy-key-for-build" >> .env
+          echo "SUPABASE_SERVICE_ROLE_KEY=dummy-key-for-build" >> .env
       
       - name: Build application
         run: npm run build

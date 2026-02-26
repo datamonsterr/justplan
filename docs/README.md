@@ -218,8 +218,8 @@ This provides the benefits of automatic scheduling (like Reclaim.ai) with the fl
 
 ## 🔐 Security & Privacy
 
-- **Authentication:** Google OAuth via Supabase Auth
-- **Multi-tenancy:** Row-Level Security (RLS) in PostgreSQL
+- **Authentication:** Clerk (Google OAuth, Email, SSO)
+- **Multi-tenancy:** Row-Level Security (RLS) in PostgreSQL using Clerk userId
 - **Encryption:** TLS in transit, encryption at rest (Supabase)
 - **Data Isolation:** Users can only access their own data
 - **Token Security:** Google tokens stored encrypted, never exposed to client

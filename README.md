@@ -136,7 +136,7 @@ pnpm exec playwright install
    - Publishable key (sb_publishable_xxx)
    - Secret key (sb_secret_xxx)
    - **Note:** Get these from Settings → API Keys (not the legacy anon/service_role keys)
-4. Create `.env.local`:
+4. Create `.env`:
 
 ```bash
 # Supabase (use new key format from API Keys tab)

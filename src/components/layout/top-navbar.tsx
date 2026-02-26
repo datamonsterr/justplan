@@ -3,14 +3,29 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
-import { Search, User, Clock, Moon, Sun, Monitor } from "lucide-react";
+import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
+import { 
+  Search, 
+  Clock, 
+  Moon, 
+  Sun, 
+  Monitor, 
+  LogIn, 
+  Menu,
+  Settings,
+  Palette,
+  Bell,
+  Link2,
+  Keyboard,
+  Database,
+  GitBranch,
+  CalendarClock,
+} from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
@@ -59,8 +74,81 @@ export function TopNavbar() {
   return (
     <>
       <nav className="flex h-9 items-center justify-between border-b bg-card px-3 shadow-sm">
-        {/* Left: Current Task */}
+        {/* Left: Hamburger Menu & Current Task */}
         <div className="flex items-center gap-2">
+          {/* Hamburger Menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon-sm" className="h-6 w-6">
+                <Menu className="h-3.5 w-3.5" />
+                <span className="sr-only">Menu</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56">
+              <DropdownMenuItem 
+                className="text-xs gap-2" 
+                onClick={() => router.push("/settings")}
+              >
+                <Settings className="h-3.5 w-3.5" />
+                General Settings
+                <kbd className="ml-auto text-[10px] text-muted-foreground">⌘,</kbd>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                className="text-xs gap-2"
+                onClick={() => router.push("/settings?section=appearance")}
+              >
+                <Palette className="h-3.5 w-3.5" />
+                Appearance
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                className="text-xs gap-2"
+                onClick={() => router.push("/settings/workflows")}
+              >
+                <GitBranch className="h-3.5 w-3.5" />
+                Workflow Configuration
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                className="text-xs gap-2"
+                onClick={() => router.push("/settings?section=working-hours")}
+              >
+                <CalendarClock className="h-3.5 w-3.5" />
+                Working Hours
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                className="text-xs gap-2"
+                onClick={() => router.push("/settings?section=notifications")}
+              >
+                <Bell className="h-3.5 w-3.5" />
+                Notifications
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                className="text-xs gap-2"
+                onClick={() => router.push("/settings?section=integrations")}
+              >
+                <Link2 className="h-3.5 w-3.5" />
+                Integrations
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                className="text-xs gap-2"
+                onClick={() => router.push("/settings?section=shortcuts")}
+              >
+                <Keyboard className="h-3.5 w-3.5" />
+                Keyboard Shortcuts
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                className="text-xs gap-2"
+                onClick={() => router.push("/settings?section=data")}
+              >
+                <Database className="h-3.5 w-3.5" />
+                Data & Privacy
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Current Task */}
           <Button
             variant="ghost"
             size="xs"
@@ -98,72 +186,65 @@ export function TopNavbar() {
           </Button>
         </div>
 
-        {/* Right: Avatar & Settings */}
+        {/* Right: Theme & User Auth */}
         <div className="flex items-center gap-2">
+          {/* Theme Switcher */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon-sm" className="h-6 w-6 rounded-full">
-                <User className="h-3.5 w-3.5" />
+              <Button variant="ghost" size="icon-sm" className="h-6 w-6">
+                <Sun className="h-3.5 w-3.5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                <Moon className="absolute h-3.5 w-3.5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                <span className="sr-only">Toggle theme</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuLabel className="text-xs">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-xs font-medium">John Doe</p>
-                  <p className="text-[10px] text-muted-foreground">
-                    john@example.com
-                  </p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-xs" onClick={() => router.push("/settings")}>
-                Settings
-                <kbd className="ml-auto text-[10px] text-muted-foreground">
-                  ⌘,
-                </kbd>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem 
+                className="text-xs" 
+                onClick={() => setTheme("light")}
+              >
+                <Sun className="mr-2 h-3 w-3" />
+                Light
+                {theme === "light" && <span className="ml-auto">✓</span>}
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-xs">
-                Keyboard Shortcuts
+              <DropdownMenuItem 
+                className="text-xs" 
+                onClick={() => setTheme("dark")}
+              >
+                <Moon className="mr-2 h-3 w-3" />
+                Dark
+                {theme === "dark" && <span className="ml-auto">✓</span>}
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger className="text-xs">
-                  <Moon className="mr-2 h-3 w-3" />
-                  Theme
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent>
-                  <DropdownMenuItem 
-                    className="text-xs" 
-                    onClick={() => setTheme("light")}
-                  >
-                    <Sun className="mr-2 h-3 w-3" />
-                    Light
-                    {theme === "light" && <span className="ml-auto">✓</span>}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    className="text-xs" 
-                    onClick={() => setTheme("dark")}
-                  >
-                    <Moon className="mr-2 h-3 w-3" />
-                    Dark
-                    {theme === "dark" && <span className="ml-auto">✓</span>}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    className="text-xs" 
-                    onClick={() => setTheme("system")}
-                  >
-                    <Monitor className="mr-2 h-3 w-3" />
-                    System
-                    {theme === "system" && <span className="ml-auto">✓</span>}
-                  </DropdownMenuItem>
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-xs text-destructive">
-                Logout
+              <DropdownMenuItem 
+                className="text-xs" 
+                onClick={() => setTheme("system")}
+              >
+                <Monitor className="mr-2 h-3 w-3" />
+                System
+                {theme === "system" && <span className="ml-auto">✓</span>}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {/* Clerk Authentication */}
+          <SignedOut>
+            <SignInButton mode="modal">
+              <Button variant="ghost" size="xs" className="h-6 gap-1.5 px-2">
+                <LogIn className="h-3 w-3" />
+                <span className="text-[11px]">Sign In</span>
+              </Button>
+            </SignInButton>
+          </SignedOut>
+          <SignedIn>
+            <UserButton 
+              afterSignOutUrl="/"
+              appearance={{
+                elements: {
+                  avatarBox: "h-6 w-6",
+                  userButtonTrigger: "focus:shadow-none",
+                }
+              }}
+            />
+          </SignedIn>
         </div>
       </nav>
 

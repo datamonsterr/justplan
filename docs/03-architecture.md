@@ -115,7 +115,7 @@ JustPlan is built as a modern, full-stack web application using Next.js 14+ (App
 | **Next.js API**   | 14.2+   | Server-side logic, API routes  |
 | **Supabase JS**   | 2.39+   | Supabase client                |
 | **PostgreSQL**    | 15+     | Database (via Supabase)        |
-| **Supabase Auth** | -       | Authentication (Google OAuth)  |
+| **Clerk**         | 6.0+    | Authentication (OAuth, SSO)    |
 | **Google APIs**   | -       | Calendar API v3, Tasks API v1  |
 | **BullMQ**        | 5.0+    | Job queue for scheduling tasks |
 | **Redis**         | 7.2+    | Queue backend + caching        |
@@ -150,39 +150,39 @@ JustPlan is built as a modern, full-stack web application using Next.js 14+ (App
 
 ```
 ┌──────────┐                                    ┌──────────────┐
-│  User    │                                    │   Google     │
+│  User    │                                    │    Clerk     │
 │  Browser │                                    │   OAuth      │
 └────┬─────┘                                    └──────┬───────┘
      │                                                  │
-     │ 1. Click "Login with Google"                   │
+     │ 1. Click "Sign In" (modal or page)            │
      ├──────────────────────────────────────────────► │
      │                                                  │
-     │ 2. OAuth consent flow                           │
+     │ 2. Choose auth method (Google, Email, etc.)    │
      │ ◄────────────────────────────────────────────┤ │
      │                                                  │
-     │ 3. Authorization code                           │
+     │ 3. Complete authentication                      │
      ├──────────────────────────────────────────────► │
      │                                                  │
-     ◄────────────────────────────────────────────┤ │
-     │ 4. Access token + Refresh token                │
+     │ 4. JWT session token                           │
+     │ ◄────────────────────────────────────────────┤ │
      │                                                  │
      ▼                                                  │
 ┌─────────────────┐                                    │
-│   Supabase      │                                    │
-│   Auth          │                                    │
+│      Clerk      │                                    │
+│    Dashboard    │                                    │
 │                 │                                    │
-│ - Store tokens  │                                    │
-│ - Create user   │                                    │
+│ - User profiles │                                    │
 │ - Session mgmt  │                                    │
+│ - SSO support   │                                    │
 └─────────────────┘                                    │
 ```
 
 **Key Points:**
 
-- Supabase handles OAuth flow with Google
-- Google tokens stored securely in Supabase
-- Access token used for Calendar/Tasks API calls
-- Refresh token for long-lived sessions
+- Clerk handles all authentication flows (OAuth, Email, SSO)
+- JWT tokens securely signed and verified by Clerk
+- Session management via ClerkProvider
+- User profiles managed in Clerk Dashboard
 
 ### 2. Data Flow Architecture
 
@@ -541,7 +541,7 @@ justplan/
 │   └── e2e/
 ├── docs/                         # Documentation
 ├── .env.example
-├── .env.local
+├── .env
 ├── next.config.js
 ├── package.json
 ├── tsconfig.json
@@ -570,22 +570,25 @@ justplan/
 
 ---
 
-### ADR-002: Supabase over Self-Hosted PostgreSQL
+### ADR-002: Supabase for Database, Clerk for Auth
 
-**Decision:** Use Supabase for database and auth
+**Decision:** Use Supabase for database, Clerk for authentication
 
 **Rationale:**
 
-- Built-in authentication with Google OAuth
-- Row-Level Security for multi-tenant data
-- Real-time subscriptions (useful for team features)
-- Automatic backups and scaling
-- Lower operational overhead
+- **Supabase:** PostgreSQL database with RLS, real-time, backups
+- **Clerk:** Modern authentication with built-in UI components
+  - Pre-built SignIn, SignUp, UserButton components
+  - Multiple auth methods (Google, Email, SSO)
+  - Session management out of the box
+  - User profile management dashboard
+- Row-Level Security using Clerk's userId
+- Lower operational overhead for auth complexity
 
 **Trade-offs:**
 
-- Vendor lock-in (mitigated by open-source Postgres)
-- Cost increases with scale (acceptable for target user count)
+- Two services instead of one (manageable complexity)
+- Need to sync Clerk userId with Supabase tables
 
 ---
 
@@ -657,10 +660,10 @@ justplan/
                    │
                    ▼
 ┌────────────────────────────────────────────────┐
-│         Next.js Middleware                     │
-│  - Check for Supabase session cookie          │
-│  - Verify JWT token                           │
-│  - Extract user_id                            │
+│         Clerk Middleware                       │
+│  - Check for Clerk session cookie             │
+│  - Verify JWT token via Clerk                 │
+│  - Extract user_id (Clerk userId)             │
 └──────────────────┬─────────────────────────────┘
                    │
          ┌─────────┴──────────┐

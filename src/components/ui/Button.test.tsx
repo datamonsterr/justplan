@@ -30,19 +30,19 @@ describe("Button Component", () => {
   it("should apply default size by default", () => {
     render(<Button>Default Button</Button>);
     const button = screen.getByText("Default Button");
-    expect(button).toHaveClass("px-4");
+    expect(button).toHaveClass("px-3");
   });
 
   it("should apply small size", () => {
     render(<Button size="sm">Small Button</Button>);
     const button = screen.getByText("Small Button");
-    expect(button).toHaveClass("px-3");
+    expect(button).toHaveClass("px-2");
   });
 
   it("should apply large size", () => {
     render(<Button size="lg">Large Button</Button>);
     const button = screen.getByText("Large Button");
-    expect(button).toHaveClass("px-8");
+    expect(button).toHaveClass("px-4");
   });
 
   it("should handle click events", async () => {

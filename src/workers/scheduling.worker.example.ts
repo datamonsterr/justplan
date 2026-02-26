@@ -5,7 +5,7 @@
  * It shows how to use the Redis worker utilities with Upstash Redis.
  * 
  * To run this worker:
- * 1. Ensure REDIS_URL is set in .env.local
+ * 1. Ensure REDIS_URL is set in .env
  * 2. Run: tsx watch src/workers/scheduling.worker.ts
  * 
  * @phase Phase 2 - Scheduling Engine

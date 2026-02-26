@@ -1,10 +1,14 @@
 import Link from "next/link";
+import { SignedIn, SignedOut, SignInButton, SignUpButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/Button";
 import { Calendar, CheckSquare, Zap } from "lucide-react";
+import { PublicHeader } from "@/components/layout/public-header";
 
 export default function Home() {
   return (
     <main className="flex min-h-screen flex-col">
+      <PublicHeader />
+      
       {/* Hero Section */}
       <div className="flex flex-1 flex-col items-center justify-center px-6 py-24 text-center">
         <div className="max-w-3xl space-y-6">
@@ -18,14 +22,25 @@ export default function Home() {
             let us handle the planning.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-            <Link href="/dashboard">
-              <Button size="lg" className="w-full sm:w-auto">
-                Open Dashboard
-              </Button>
-            </Link>
-            <Button size="lg" variant="outline" className="w-full sm:w-auto">
-              Learn More
-            </Button>
+            <SignedOut>
+              <SignUpButton mode="modal">
+                <Button size="lg" className="w-full sm:w-auto">
+                  Get Started Free
+                </Button>
+              </SignUpButton>
+              <SignInButton mode="modal">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto">
+                  Sign In
+                </Button>
+              </SignInButton>
+            </SignedOut>
+            <SignedIn>
+              <Link href="/dashboard">
+                <Button size="lg" className="w-full sm:w-auto">
+                  Open Dashboard
+                </Button>
+              </Link>
+            </SignedIn>
           </div>
         </div>
 

@@ -130,6 +130,9 @@ function TaskCard({ task, onClick, isSubtask = false }: { task: Task; onClick: (
 export function TaskSidebar({ onTaskSelect }: TaskSidebarProps) {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [filterOpen, setFilterOpen] = React.useState(false);
+  const [isAddingTask, setIsAddingTask] = React.useState(false);
+  const [newTaskInput, setNewTaskInput] = React.useState("");
+  const newTaskInputRef = React.useRef<HTMLInputElement>(null);
   const [expandedStates, setExpandedStates] = React.useState<Record<string, boolean>>({
     "In Progress": true,
     "Ready": true,
@@ -143,6 +146,41 @@ export function TaskSidebar({ onTaskSelect }: TaskSidebarProps) {
       ...prev,
       [state]: !prev[state],
     }));
+  };
+
+  // Focus input when adding task
+  React.useEffect(() => {
+    if (isAddingTask && newTaskInputRef.current) {
+      newTaskInputRef.current.focus();
+    }
+  }, [isAddingTask]);
+
+  const handleNewTask = () => {
+    setIsAddingTask(true);
+  };
+
+  const handleCreateTask = async () => {
+    if (!newTaskInput.trim()) {
+      setIsAddingTask(false);
+      return;
+    }
+
+    // TODO: Call API to create task using parseAndCreateTask from use-tasks hook
+    console.log("Creating task:", newTaskInput);
+    
+    // Reset state
+    setNewTaskInput("");
+    setIsAddingTask(false);
+  };
+
+  const handleInputKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleCreateTask();
+    } else if (e.key === "Escape") {
+      setNewTaskInput("");
+      setIsAddingTask(false);
+    }
   };
 
   // Filter tasks based on search query
@@ -172,11 +210,33 @@ export function TaskSidebar({ onTaskSelect }: TaskSidebarProps) {
       <div className="border-b px-3 py-2">
         <div className="mb-2 flex items-center justify-between">
           <h2 className="text-sm font-semibold">Tasks</h2>
-          <Button size="xs" className="h-6 gap-1">
+          <Button size="xs" className="h-6 gap-1" onClick={handleNewTask}>
             <Plus className="h-3 w-3" />
             New Task
           </Button>
         </div>
+
+        {/* New Task Input */}
+        {isAddingTask && (
+          <div className="mb-2">
+            <Input
+              ref={newTaskInputRef}
+              placeholder="Task name [2hr:high:before Feb 25]"
+              value={newTaskInput}
+              onChange={(e) => setNewTaskInput(e.target.value)}
+              onKeyDown={handleInputKeyDown}
+              onBlur={() => {
+                if (!newTaskInput.trim()) {
+                  setIsAddingTask(false);
+                }
+              }}
+              className="h-7 text-xs"
+            />
+            <p className="mt-1 text-[10px] text-muted-foreground">
+              Press Enter to create, Esc to cancel
+            </p>
+          </div>
+        )}
 
         {/* Search & Filter */}
         <div className="flex gap-1">

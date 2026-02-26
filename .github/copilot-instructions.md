@@ -501,7 +501,7 @@ log('Creating task %o', taskData);
 
 ### Required Variables
 
-**Local Development** (`.env.local`):
+**Local Development** (`.env`):
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=local-publishable-key

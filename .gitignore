@@ -53,3 +53,6 @@ supabase/.temp
 
 # Redis
 dump.rdb
+
+# clerk configuration (can include secrets)
+/.clerk/
