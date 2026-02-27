@@ -146,11 +146,26 @@ pnpm add <package>
 pnpm dev
 pnpm build
 pnpm test
+pnpm dlx <cli>            # One-off CLIs (use instead of npx)
 
-# Never use npm or yarn
+# Never use npm, yarn, or npx
 ❌ npm install
 ❌ yarn add
+❌ npx <command>
 ```
+
+## UI Components: shadcn First
+
+**Prefer existing UI components before creating new ones:**
+
+- Reuse components in `src/components/ui` first.
+- Add shadcn components with:
+
+```bash
+pnpm dlx shadcn@latest add <component>
+```
+
+- Keep generated components aligned with existing project conventions and styling.
 
 ---
 
@@ -615,15 +630,16 @@ pnpm start                 # Start production server
 ## Summary: Key Rules
 
 1. ✅ **Use pnpm** (never npm/yarn)
-2. ✅ **Single comprehensive docs** (no split files like deployment checklists)
-3. ✅ **Plan in `docs/`**, execute in `src/`
-4. ✅ **Operational docs in root** (`DEPLOYMENT.md`, `SETUP.md`)
-5. ✅ **Server Components by default**, client only when needed
-6. ✅ **Type everything** with TypeScript
-7. ✅ **Test alongside implementation**
-8. ✅ **Use appropriate skills** for each task type
-9. ✅ **Keep file structure consistent** with conventions above
-10. ✅ **AI on server-side only** with rate limiting and caching
+2. ✅ **Prefer existing shadcn UI** and add via `pnpm dlx shadcn@latest add`
+3. ✅ **Single comprehensive docs** (no split files like deployment checklists)
+4. ✅ **Plan in `docs/`**, execute in `src/`
+5. ✅ **Operational docs in root** (`DEPLOYMENT.md`, `SETUP.md`)
+6. ✅ **Server Components by default**, client only when needed
+7. ✅ **Type everything** with TypeScript
+8. ✅ **Test alongside implementation**
+9. ✅ **Use appropriate skills** for each task type
+10. ✅ **Keep file structure consistent** with conventions above
+11. ✅ **AI on server-side only** with rate limiting and caching
 
 ---
 

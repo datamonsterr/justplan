@@ -10,6 +10,7 @@
 
 ## Build, Test, and Development Commands
 Use `pnpm` for local development (`packageManager` is pinned to pnpm 8).
+- Must use `pnpm` only. Never use `npm`, `yarn`, or `npx` in this repository.
 - `pnpm dev`: start local app at `http://localhost:3000`.
 - `pnpm build` / `pnpm start`: build and run production output.
 - `pnpm lint`: run ESLint rules.
@@ -17,6 +18,10 @@ Use `pnpm` for local development (`packageManager` is pinned to pnpm 8).
 - `pnpm format`: format code with Prettier.
 - `pnpm test`, `pnpm test:unit`, `pnpm test:e2e`, `pnpm test:coverage`: run Vitest/Playwright checks.
 - `pnpm supabase:start|stop|reset|push|diff`: local/remote Supabase workflow.
+
+## UI Component Rules
+- Prefer existing components in `src/components/ui` before creating new UI primitives.
+- For new shadcn components, use `pnpm dlx shadcn@latest add <component>` and adapt the generated output to existing project patterns.
 
 ## Coding Style & Naming Conventions
 - TypeScript is `strict`; use alias imports via `@/*` for `src/*`.
