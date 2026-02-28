@@ -22,7 +22,7 @@ This directory contains automated workflows for continuous integration and deplo
 - Parallel job execution for speed
 - Automatic test coverage artifact upload
 - Cancels in-progress runs when new commits are pushed
-- Node.js 18 with npm caching
+- Node.js 18 with pnpm caching
 
 ### 🎨 Auto Format (`.github/workflows/format.yml`)
 
@@ -44,16 +44,16 @@ Before pushing, run these commands to catch issues early:
 
 ```bash
 # Run all CI checks locally
-npm run lint              # ESLint
-npm run type-check        # TypeScript
-npm run test:unit         # Unit tests
-npm run build             # Build check
+pnpm lint                 # ESLint
+pnpm type-check           # TypeScript
+pnpm test:unit            # Unit tests
+pnpm build                # Build check
 
 # Or check formatting
-npx prettier --check "**/*.{ts,tsx,js,jsx,json,css,md}"
+pnpm exec prettier --check "**/*.{ts,tsx,js,jsx,json,css,md}"
 
 # Auto-fix formatting
-npm run format
+pnpm format
 ```
 
 ---
@@ -66,7 +66,7 @@ npm run format
 
 **View coverage locally:**
 ```bash
-npm run test:coverage
+pnpm test:coverage
 open coverage/index.html
 ```
 
@@ -87,13 +87,13 @@ Add these badges to your README:
 ### CI Fails on Lint
 
 ```bash
-npm run lint -- --fix
+pnpm lint -- --fix
 ```
 
 ### CI Fails on Format
 
 ```bash
-npm run format
+pnpm format
 git add .
 git commit -m "style: format code"
 ```
@@ -101,14 +101,14 @@ git commit -m "style: format code"
 ### CI Fails on Tests
 
 ```bash
-npm run test:unit
+pnpm test:unit
 # Fix failing tests
 ```
 
 ### CI Fails on Build
 
 ```bash
-npm run build
+pnpm build
 # Check for TypeScript or build errors
 ```
 
@@ -136,13 +136,18 @@ e2e:
   runs-on: ubuntu-latest
   steps:
     - uses: actions/checkout@v4
+    - uses: pnpm/action-setup@v4
+      with:
+        version: 8.15.0
+        run_install: false
     - uses: actions/setup-node@v4
       with:
         node-version: '18'
-        cache: 'npm'
-    - run: npm ci
-    - run: npx playwright install --with-deps
-    - run: npm run test:e2e
+        cache: 'pnpm'
+        cache-dependency-path: pnpm-lock.yaml
+    - run: pnpm install --frozen-lockfile
+    - run: pnpm exec playwright install --with-deps
+    - run: pnpm test:e2e
 ```
 
 ### Add Security Scanning
@@ -153,7 +158,17 @@ security:
   runs-on: ubuntu-latest
   steps:
     - uses: actions/checkout@v4
-    - run: npm audit --production
+    - uses: pnpm/action-setup@v4
+      with:
+        version: 8.15.0
+        run_install: false
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'pnpm'
+        cache-dependency-path: pnpm-lock.yaml
+    - run: pnpm install --frozen-lockfile
+    - run: pnpm audit --prod
 ```
 
 ### Add Deployment
@@ -179,7 +194,7 @@ deploy:
 
 1. **Keep CI Fast** - Run tests in parallel
 2. **Fail Fast** - Use `cancel-in-progress: true`
-3. **Cache Dependencies** - Use `cache: 'npm'` in setup-node
+3. **Cache Dependencies** - Use `cache: 'pnpm'` in setup-node
 4. **Test Locally First** - Don't rely on CI to catch issues
 5. **Monitor Coverage** - Aim for >80% code coverage
 6. **Keep Workflows DRY** - Use composite actions for repeated steps
