@@ -1,14 +1,15 @@
 import { Worker, Job } from "bullmq";
 import type { RedisOptions } from "ioredis";
+import { resolveBullMqRedisUrl } from "./config";
 
 /**
  * BullMQ Worker Configuration
- * 
+ *
  * Helper utilities for creating workers with Upstash Redis TCP compatibility.
  * Workers process jobs from queues asynchronously.
- * 
+ *
  * Note: BullMQ requires TCP connections (ioredis), not REST API.
- * 
+ *
  * @see https://docs.bullmq.io/guide/workers
  */
 
@@ -17,12 +18,12 @@ import type { RedisOptions } from "ioredis";
  * Handles both redis:// and rediss:// (TLS) URLs
  */
 export function getWorkerConnectionOptions(): RedisOptions {
-  const redisUrl = process.env.REDIS_URL;
+  const redisUrl = resolveBullMqRedisUrl();
 
   if (!redisUrl) {
     throw new Error(
-      "REDIS_URL environment variable is not set. " +
-      "For BullMQ, get TCP URL from https://console.upstash.com → Your Database → Connect"
+      "BullMQ Redis URL is not set. " +
+        "Provide REDIS_URL (TCP) or UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN."
     );
   }
 
@@ -57,21 +58,21 @@ export function getWorkerConnectionOptions(): RedisOptions {
 
 /**
  * Create a BullMQ worker with Upstash-compatible connection
- * 
+ *
  * @param queueName - Name of the queue to process
  * @param processor - Job processing function
  * @param options - Additional worker options
- * 
+ *
  * @example
  * ```ts
  * import { createWorker } from '@/lib/redis/worker';
- * 
+ *
  * const worker = createWorker('scheduling', async (job) => {
  *   console.log('Processing job:', job.id);
  *   // Process the job
  *   return { success: true };
  * });
- * 
+ *
  * // Graceful shutdown
  * process.on('SIGTERM', async () => {
  *   await worker.close();

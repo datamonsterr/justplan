@@ -3,41 +3,47 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import {
+  invalidRequestResponse,
+  internalErrorResponse,
+} from "@/lib/api/error-response";
+import {
+  isApiAuthError,
+  requireApiUser,
+  toApiAuthErrorResponse,
+} from "@/lib/auth";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createTaskService, updateTaskSchema } from "@/services/task.service";
-
-// Mock user ID for development
-const MOCK_USER_ID = "00000000-0000-0000-0000-000000000001";
+import { triggerWorkflowTransitionEvaluation } from "@/services/workflow-transition-trigger.service";
 
 type RouteParams = { params: Promise<{ id: string }> };
 
 /**
  * GET /api/tasks/[id] - Get a single task
  */
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(_request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
-    const supabase = await createClient();
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    const userId = user?.id ?? MOCK_USER_ID;
+    const { dbUserId } = await requireApiUser();
+    const supabase = createAdminClient();
 
-    const taskService = createTaskService(supabase, userId);
+    const taskService = createTaskService(supabase, dbUserId);
     const result = await taskService.getTaskById(id);
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: result.error },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: result.error }, { status: 404 });
     }
 
     return NextResponse.json({ data: result.data });
   } catch (error) {
+    if (isApiAuthError(error)) {
+      return toApiAuthErrorResponse(error);
+    }
     console.error("GET /api/tasks/[id] error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
+    return internalErrorResponse(
+      process.env.NODE_ENV === "development" && error instanceof Error
+        ? error.message
+        : undefined
     );
   }
 }
@@ -48,38 +54,42 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
-    const supabase = await createClient();
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    const userId = user?.id ?? MOCK_USER_ID;
+    const { dbUserId } = await requireApiUser();
+    const supabase = createAdminClient();
 
     const body = await request.json();
 
     // Validate request body
     const parsed = updateTaskSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: parsed.error.errors.map(e => e.message).join(", ") },
-        { status: 400 }
+      return invalidRequestResponse(
+        parsed.error.errors.map((e) => e.message).join(", "),
+        parsed.error.errors
       );
     }
 
-    const taskService = createTaskService(supabase, userId);
+    const taskService = createTaskService(supabase, dbUserId);
     const result = await taskService.updateTask(id, parsed.data);
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: result.error },
-        { status: 400 }
-      );
+      return invalidRequestResponse(result.error);
     }
+
+    void triggerWorkflowTransitionEvaluation(
+      { userId: dbUserId, taskIds: [id] },
+      "PATCH /api/tasks/[id]"
+    );
 
     return NextResponse.json({ data: result.data });
   } catch (error) {
+    if (isApiAuthError(error)) {
+      return toApiAuthErrorResponse(error);
+    }
     console.error("PATCH /api/tasks/[id] error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
+    return internalErrorResponse(
+      process.env.NODE_ENV === "development" && error instanceof Error
+        ? error.message
+        : undefined
     );
   }
 }
@@ -87,30 +97,29 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 /**
  * DELETE /api/tasks/[id] - Soft delete a task
  */
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
-    const supabase = await createClient();
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    const userId = user?.id ?? MOCK_USER_ID;
+    const { dbUserId } = await requireApiUser();
+    const supabase = createAdminClient();
 
-    const taskService = createTaskService(supabase, userId);
+    const taskService = createTaskService(supabase, dbUserId);
     const result = await taskService.deleteTask(id);
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: result.error },
-        { status: 400 }
-      );
+      return invalidRequestResponse(result.error);
     }
 
     return NextResponse.json({ data: result.data });
   } catch (error) {
+    if (isApiAuthError(error)) {
+      return toApiAuthErrorResponse(error);
+    }
     console.error("DELETE /api/tasks/[id] error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
+    return internalErrorResponse(
+      process.env.NODE_ENV === "development" && error instanceof Error
+        ? error.message
+        : undefined
     );
   }
 }

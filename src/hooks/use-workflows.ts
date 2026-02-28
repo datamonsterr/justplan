@@ -10,12 +10,11 @@ export interface WorkflowState {
   userId: string;
   name: string;
   color: string;
-  position: number;
-  isDefault: boolean;
-  excludeFromScheduling: boolean;
+  order: number;
+  isTerminal: boolean;
+  shouldAutoSchedule: boolean;
   schedulingPriorityBoost: number;
   createdAt: string;
-  updatedAt: string;
 }
 
 export interface WorkflowTransition {
@@ -23,6 +22,15 @@ export interface WorkflowTransition {
   userId: string;
   fromStateId: string;
   toStateId: string;
+  conditionType:
+    | "deadline_within"
+    | "overdue"
+    | "time_in_state"
+    | "manual"
+    | "task_completed"
+    | "scheduled_time_passed";
+  conditionValue: Record<string, unknown> | null;
+  isEnabled: boolean;
   createdAt: string;
 }
 
@@ -32,19 +40,24 @@ export interface WorkflowGraph {
     type: string;
     position: { x: number; y: number };
     data: {
-      label: string;
+      id: string;
+      name: string;
       color: string;
       isDefault: boolean;
+      isTerminal: boolean;
       excludeFromScheduling: boolean;
+      schedulingPriorityBoost: number;
     };
   }>;
   edges: Array<{
     id: string;
     source: string;
     target: string;
-    type: string;
-    animated: boolean;
-    style: { stroke: string };
+    data: {
+      conditionType: string;
+      conditionValue: unknown;
+      isEnabled?: boolean;
+    };
   }>;
 }
 
@@ -57,7 +70,12 @@ export interface UseWorkflowsResult {
   createState: (state: CreateStateInput) => Promise<WorkflowState | null>;
   updateState: (id: string, updates: Partial<WorkflowState>) => Promise<boolean>;
   deleteState: (id: string) => Promise<boolean>;
-  createTransition: (fromStateId: string, toStateId: string) => Promise<boolean>;
+  createTransition: (
+    input: Pick<WorkflowTransition, "fromStateId" | "toStateId" | "conditionType"> & {
+      conditionValue?: Record<string, unknown> | null;
+      isEnabled?: boolean;
+    }
+  ) => Promise<boolean>;
   deleteTransition: (id: string) => Promise<boolean>;
   reorderStates: (stateIds: string[]) => Promise<boolean>;
 }
@@ -65,8 +83,8 @@ export interface UseWorkflowsResult {
 export interface CreateStateInput {
   name: string;
   color?: string;
-  isDefault?: boolean;
-  excludeFromScheduling?: boolean;
+  isTerminal?: boolean;
+  shouldAutoSchedule?: boolean;
   schedulingPriorityBoost?: number;
 }
 
@@ -126,9 +144,9 @@ export function useWorkflows(): UseWorkflowsResult {
         body: JSON.stringify({
           name: input.name,
           color: input.color,
-          is_default: input.isDefault,
-          exclude_from_scheduling: input.excludeFromScheduling,
-          scheduling_priority_boost: input.schedulingPriorityBoost,
+          isTerminal: input.isTerminal ?? false,
+          shouldAutoSchedule: input.shouldAutoSchedule ?? true,
+          schedulingPriorityBoost: input.schedulingPriorityBoost ?? 0,
         }),
       });
 
@@ -196,14 +214,23 @@ export function useWorkflows(): UseWorkflowsResult {
     }
   }, []);
 
-  const createTransition = useCallback(async (fromStateId: string, toStateId: string): Promise<boolean> => {
+  const createTransition = useCallback(
+    async (
+      input: Pick<WorkflowTransition, "fromStateId" | "toStateId" | "conditionType"> & {
+        conditionValue?: Record<string, unknown> | null;
+        isEnabled?: boolean;
+      }
+    ): Promise<boolean> => {
     try {
       const response = await fetch("/api/workflows/transitions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          from_state_id: fromStateId,
-          to_state_id: toStateId,
+          fromStateId: input.fromStateId,
+          toStateId: input.toStateId,
+          conditionType: input.conditionType,
+          conditionValue: input.conditionValue ?? null,
+          isEnabled: input.isEnabled ?? true,
         }),
       });
 
@@ -261,7 +288,7 @@ export function useWorkflows(): UseWorkflowsResult {
       const reorderedStates = stateIds
         .map((id, index) => {
           const state = states.find((s) => s.id === id);
-          return state ? { ...state, position: index } : null;
+          return state ? { ...state, order: index } : null;
         })
         .filter((s): s is WorkflowState => s !== null);
 

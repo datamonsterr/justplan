@@ -18,20 +18,19 @@ interface WorkflowState {
   id: string;
   name: string;
   color: string;
-  is_default: boolean;
-  is_terminal: boolean;
-  exclude_from_scheduling: boolean;
-  scheduling_priority_boost: number;
-  order_index: number;
+  order: number;
+  isTerminal: boolean;
+  shouldAutoSchedule: boolean;
+  schedulingPriorityBoost: number;
 }
 
 interface WorkflowTransition {
   id: string;
-  from_state_id: string;
-  to_state_id: string;
-  condition_type: string;
-  condition_value: Record<string, unknown> | null;
-  is_enabled: boolean;
+  fromStateId: string;
+  toStateId: string;
+  conditionType: string;
+  conditionValue: Record<string, unknown> | null;
+  isEnabled: boolean;
 }
 
 interface WorkflowGraph {
@@ -104,13 +103,10 @@ export default function WorkflowSettingsPage() {
           const stateData = {
             name: node.data.name,
             color: node.data.color || "#3B82F6",
-            is_default: node.data.isDefault || false,
-            is_terminal: node.data.isTerminal || false,
-            exclude_from_scheduling: node.data.excludeFromScheduling || false,
-            scheduling_priority_boost: node.data.schedulingPriorityBoost || 0,
-            order_index: i,
-            position_x: Math.round(node.position.x),
-            position_y: Math.round(node.position.y),
+            isTerminal: node.data.isTerminal || false,
+            shouldAutoSchedule: !node.data.excludeFromScheduling,
+            schedulingPriorityBoost: node.data.schedulingPriorityBoost || 0,
+            order: i,
           };
 
           const isExisting = currentStateIds.has(node.data.id);
@@ -147,12 +143,24 @@ export default function WorkflowSettingsPage() {
           }
         }
 
-        // 3. Delete states that no longer exist
+        // 3.5 Reorder states according to canvas order.
+        const orderedStateIds = updatedNodes
+          .map((node) => idMap.get(node.id) || node.data.id)
+          .filter((id): id is string => !!id);
+        if (orderedStateIds.length > 0) {
+          await fetch("/api/workflows/reorder", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ stateIds: orderedStateIds }),
+          });
+        }
+
+        // 4. Delete states that no longer exist
         const updatedNodeIds = new Set(updatedNodes.map((n) => n.data.id));
         for (const state of currentStates) {
           if (!updatedNodeIds.has(state.id)) {
-            // Don't delete default state
-            if (state.is_default) continue;
+            // Keep the first state as a safety fallback.
+            if (state.order === 0) continue;
 
             await fetch(`/api/workflows/${state.id}`, {
               method: "DELETE",
@@ -160,7 +168,7 @@ export default function WorkflowSettingsPage() {
           }
         }
 
-        // 4. Delete all existing transitions and recreate them
+        // 5. Delete all existing transitions and recreate them
         const transitionsResponse = await fetch("/api/workflows/transitions");
         const transitionsResult = await transitionsResponse.json();
         
@@ -172,7 +180,7 @@ export default function WorkflowSettingsPage() {
           }
         }
 
-        // 5. Create new transitions
+        // 6. Create new transitions
         for (const edge of updatedEdges) {
           const fromStateId = idMap.get(edge.source) || 
             updatedNodes.find((n) => n.id === edge.source)?.data.id;
@@ -185,11 +193,11 @@ export default function WorkflowSettingsPage() {
           }
 
           const transitionData = {
-            from_state_id: fromStateId,
-            to_state_id: toStateId,
-            condition_type: edge.data?.conditionType || "manual",
-            condition_value: edge.data?.conditionValue || null,
-            is_enabled: edge.data?.isEnabled ?? true,
+            fromStateId,
+            toStateId,
+            conditionType: edge.data?.conditionType || "manual",
+            conditionValue: edge.data?.conditionValue || null,
+            isEnabled: edge.data?.isEnabled ?? true,
           };
 
           const response = await fetch("/api/workflows/transitions", {
@@ -204,7 +212,7 @@ export default function WorkflowSettingsPage() {
           }
         }
 
-        // 6. Refresh the graph to get latest data
+        // 7. Refresh the graph to get latest data
         await fetchWorkflow();
       } catch (err) {
         const message = err instanceof Error ? err.message : "Failed to save workflow";

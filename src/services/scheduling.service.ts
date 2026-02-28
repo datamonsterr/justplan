@@ -28,6 +28,8 @@ export interface JobStatus {
   finishedAt?: Date;
 }
 
+export type JobAccessResult = "owned" | "forbidden" | "not_found";
+
 /**
  * Queue a scheduling job
  */
@@ -85,6 +87,25 @@ export async function getJobStatus(jobId: string): Promise<JobStatus | null> {
     processedAt: job.processedOn ? new Date(job.processedOn) : undefined,
     finishedAt: job.finishedOn ? new Date(job.finishedOn) : undefined,
   };
+}
+
+/**
+ * Check whether a scheduling job belongs to a user.
+ */
+export async function checkJobAccess(
+  jobId: string,
+  userId: string
+): Promise<JobAccessResult> {
+  const job = await schedulingQueue.getJob(jobId);
+  if (!job) {
+    return "not_found";
+  }
+
+  if (job.data.userId !== userId) {
+    return "forbidden";
+  }
+
+  return "owned";
 }
 
 /**

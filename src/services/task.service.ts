@@ -35,6 +35,7 @@ export interface Task {
   googleTaskId: string | null;
   googleCalendarEventId: string | null;
   parentTaskId: string | null;
+  dependsOnTaskId: string | null;
   aiGenerated: boolean;
   metadata: Record<string, unknown>;
   createdAt: string;
@@ -55,6 +56,14 @@ interface WorkflowStateBasic {
 // Zod Schemas
 // ============================================================================
 
+const deadlineSchema = z
+  .union([
+    z.string().datetime(),
+    z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format"),
+  ])
+  .optional()
+  .nullable();
+
 export const createTaskSchema = z.object({
   title: z.string().min(1, "Title is required").max(200, "Title too long"),
   description: z.string().max(2000).optional(),
@@ -63,15 +72,17 @@ export const createTaskSchema = z.object({
     .int()
     .positive("Duration must be positive")
     .max(480, "Duration cannot exceed 8 hours"),
-  deadline: z.string().datetime().optional(),
+  deadline: deadlineSchema,
   priority: z.enum(["low", "medium", "high"]).default("medium"),
   workflowStateId: z.string().uuid().optional(),
   parentTaskId: z.string().uuid().optional(),
+  dependsOnTaskId: z.string().uuid().optional(),
   isPinned: z.boolean().default(false),
   metadata: z.record(z.unknown()).default({}),
 });
 
 export const updateTaskSchema = createTaskSchema.partial().extend({
+  dependsOnTaskId: z.string().uuid().nullable().optional(),
   isScheduled: z.boolean().optional(),
   scheduledStart: z.string().datetime().optional(),
   scheduledEnd: z.string().datetime().optional(),
@@ -88,7 +99,9 @@ export class TaskService extends BaseService {
   /**
    * Transform database row to Task interface
    */
-  private transformTask(row: TaskRow & { workflow_states?: WorkflowStateBasic | null }): Task {
+  private transformTask(
+    row: TaskRow & { workflow_states?: WorkflowStateBasic | null }
+  ): Task {
     return {
       id: row.id,
       userId: row.user_id,
@@ -104,16 +117,103 @@ export class TaskService extends BaseService {
       isPinned: row.is_pinned,
       googleTaskId: row.google_task_id,
       googleCalendarEventId: row.google_calendar_event_id,
-      parentTaskId: (row as Record<string, unknown>).parent_task_id as string | null ?? null,
-      aiGenerated: (row as Record<string, unknown>).ai_generated as boolean ?? false,
-      metadata: typeof row.metadata === "object" && row.metadata !== null
-        ? (row.metadata as Record<string, unknown>)
-        : {},
+      parentTaskId:
+        ((row as Record<string, unknown>).parent_task_id as string | null) ??
+        null,
+      dependsOnTaskId:
+        ((row as Record<string, unknown>).depends_on_task_id as
+          | string
+          | null) ?? null,
+      aiGenerated:
+        ((row as Record<string, unknown>).ai_generated as boolean) ?? false,
+      metadata:
+        typeof row.metadata === "object" && row.metadata !== null
+          ? (row.metadata as Record<string, unknown>)
+          : {},
       createdAt: row.created_at,
       updatedAt: row.updated_at,
       deletedAt: row.deleted_at,
       workflowState: row.workflow_states ?? undefined,
     };
+  }
+
+  private async validateDependency(
+    dependsOnTaskId: string,
+    taskIdToExclude?: string
+  ): Promise<ApiResponse<true>> {
+    if (taskIdToExclude && dependsOnTaskId === taskIdToExclude) {
+      return failure("A task cannot depend on itself");
+    }
+
+    const { data: dependencyTask, error: dependencyError } = await this.supabase
+      .from("tasks")
+      .select("id, depends_on_task_id")
+      .eq("id", dependsOnTaskId)
+      .eq("user_id", this.userId)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (dependencyError || !dependencyTask) {
+      return failure("Dependency task not found");
+    }
+
+    // Prevent direct circular dependency A -> B while B -> A.
+    if (
+      taskIdToExclude &&
+      (dependencyTask as Record<string, unknown>).depends_on_task_id ===
+        taskIdToExclude
+    ) {
+      return failure("Circular dependency detected");
+    }
+
+    return success(true);
+  }
+
+  private async isTaskDependencyResolved(taskId: string): Promise<boolean> {
+    const { data: taskRow } = await this.supabase
+      .from("tasks")
+      .select("depends_on_task_id")
+      .eq("id", taskId)
+      .eq("user_id", this.userId)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (!taskRow) {
+      return false;
+    }
+
+    const dependencyId = (taskRow as Record<string, unknown>)
+      .depends_on_task_id as string | null;
+
+    if (!dependencyId) {
+      return true;
+    }
+
+    const { data: dependency } = await this.supabase
+      .from("tasks")
+      .select(
+        `
+        id,
+        workflow_states (
+          is_terminal
+        )
+      `
+      )
+      .eq("id", dependencyId)
+      .eq("user_id", this.userId)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    return !!(
+      dependency &&
+      (dependency as Record<string, unknown>).workflow_states &&
+      (
+        (dependency as Record<string, unknown>).workflow_states as Record<
+          string,
+          unknown
+        >
+      ).is_terminal === true
+    );
   }
 
   /**
@@ -127,14 +227,16 @@ export class TaskService extends BaseService {
   }): Promise<ApiResponse<Task[]>> {
     let query = this.supabase
       .from("tasks")
-      .select(`
+      .select(
+        `
         *,
         workflow_states (
           id,
           name,
           color
         )
-      `)
+      `
+      )
       .eq("user_id", this.userId)
       .is("deleted_at", null)
       .order("created_at", { ascending: false });
@@ -201,14 +303,16 @@ export class TaskService extends BaseService {
 
     const { data, error } = await this.supabase
       .from("tasks")
-      .select(`
+      .select(
+        `
         *,
         workflow_states (
           id,
           name,
           color
         )
-      `)
+      `
+      )
       .eq("id", id)
       .eq("user_id", this.userId)
       .is("deleted_at", null)
@@ -221,21 +325,25 @@ export class TaskService extends BaseService {
     // Fetch subtasks
     const { data: subtasksData } = await this.supabase
       .from("tasks")
-      .select(`
+      .select(
+        `
         *,
         workflow_states (
           id,
           name,
           color
         )
-      `)
+      `
+      )
       .eq("parent_task_id", id)
       .eq("user_id", this.userId)
       .is("deleted_at", null)
       .order("created_at", { ascending: true });
 
     const task = this.transformTask(data as TaskRow);
-    task.subtasks = (subtasksData || []).map((row) => this.transformTask(row as TaskRow));
+    task.subtasks = (subtasksData || []).map((row) =>
+      this.transformTask(row as TaskRow)
+    );
 
     return success(task);
   }
@@ -249,6 +357,15 @@ export class TaskService extends BaseService {
       return failure(validation.error!);
     }
 
+    if (input.dependsOnTaskId) {
+      const dependencyValidation = await this.validateDependency(
+        input.dependsOnTaskId
+      );
+      if (!dependencyValidation.success) {
+        return failure(dependencyValidation.error!);
+      }
+    }
+
     const { data, error } = await this.supabase
       .from("tasks")
       .insert({
@@ -260,17 +377,20 @@ export class TaskService extends BaseService {
         priority: input.priority,
         workflow_state_id: input.workflowStateId,
         parent_task_id: input.parentTaskId,
+        depends_on_task_id: input.dependsOnTaskId,
         is_pinned: input.isPinned,
         metadata: input.metadata,
       })
-      .select(`
+      .select(
+        `
         *,
         workflow_states (
           id,
           name,
           color
         )
-      `)
+      `
+      )
       .single();
 
     if (error) {
@@ -283,7 +403,10 @@ export class TaskService extends BaseService {
   /**
    * Update an existing task
    */
-  async updateTask(id: string, input: UpdateTaskInput): Promise<ApiResponse<Task>> {
+  async updateTask(
+    id: string,
+    input: UpdateTaskInput
+  ): Promise<ApiResponse<Task>> {
     const idValidation = validateInput(uuidSchema, id);
     if (!idValidation.success) {
       return failure(idValidation.error!);
@@ -294,21 +417,84 @@ export class TaskService extends BaseService {
       return failure(validation.error!);
     }
 
+    if (input.dependsOnTaskId !== undefined && input.dependsOnTaskId !== null) {
+      const dependencyValidation = await this.validateDependency(
+        input.dependsOnTaskId,
+        id
+      );
+      if (!dependencyValidation.success) {
+        return failure(dependencyValidation.error!);
+      }
+    }
+
+    if (input.workflowStateId) {
+      const { data: targetState } = await this.supabase
+        .from("workflow_states")
+        .select("is_terminal")
+        .eq("id", input.workflowStateId)
+        .eq("user_id", this.userId)
+        .maybeSingle();
+
+      if (
+        targetState &&
+        (targetState as Record<string, unknown>).is_terminal === true
+      ) {
+        let resolved: boolean;
+        if (input.dependsOnTaskId === null) {
+          resolved = true;
+        } else if (typeof input.dependsOnTaskId === "string") {
+          const { data: dependency } = await this.supabase
+            .from("tasks")
+            .select(
+              `
+              id,
+              workflow_states (
+                is_terminal
+              )
+            `
+            )
+            .eq("id", input.dependsOnTaskId)
+            .eq("user_id", this.userId)
+            .is("deleted_at", null)
+            .maybeSingle();
+
+          const state = dependency
+            ? ((dependency as Record<string, unknown>)
+                .workflow_states as Record<string, unknown> | null)
+            : null;
+          resolved = !!state && state.is_terminal === true;
+        } else {
+          resolved = await this.isTaskDependencyResolved(id);
+        }
+
+        if (!resolved) {
+          return failure("Cannot complete task before dependency is completed");
+        }
+      }
+    }
+
     // Build update object with only provided fields
     const updateData: Record<string, unknown> = {};
     if (input.title !== undefined) updateData.title = input.title;
-    if (input.description !== undefined) updateData.description = input.description;
+    if (input.description !== undefined)
+      updateData.description = input.description;
     if (input.estimatedDurationMinutes !== undefined)
       updateData.estimated_duration_minutes = input.estimatedDurationMinutes;
     if (input.deadline !== undefined) updateData.deadline = input.deadline;
     if (input.priority !== undefined) updateData.priority = input.priority;
     if (input.workflowStateId !== undefined)
       updateData.workflow_state_id = input.workflowStateId;
+    if (input.parentTaskId !== undefined)
+      updateData.parent_task_id = input.parentTaskId;
+    if (input.dependsOnTaskId !== undefined)
+      updateData.depends_on_task_id = input.dependsOnTaskId;
     if (input.isPinned !== undefined) updateData.is_pinned = input.isPinned;
-    if (input.isScheduled !== undefined) updateData.is_scheduled = input.isScheduled;
+    if (input.isScheduled !== undefined)
+      updateData.is_scheduled = input.isScheduled;
     if (input.scheduledStart !== undefined)
       updateData.scheduled_start = input.scheduledStart;
-    if (input.scheduledEnd !== undefined) updateData.scheduled_end = input.scheduledEnd;
+    if (input.scheduledEnd !== undefined)
+      updateData.scheduled_end = input.scheduledEnd;
     if (input.metadata !== undefined) updateData.metadata = input.metadata;
 
     const { data, error } = await this.supabase
@@ -317,14 +503,16 @@ export class TaskService extends BaseService {
       .eq("id", id)
       .eq("user_id", this.userId)
       .is("deleted_at", null)
-      .select(`
+      .select(
+        `
         *,
         workflow_states (
           id,
           name,
           color
         )
-      `)
+      `
+      )
       .single();
 
     if (error) {
@@ -335,7 +523,7 @@ export class TaskService extends BaseService {
   }
 
   /**
-   * Soft delete a task (and its subtasks)
+   * Soft delete a task (and all nested subtasks)
    */
   async deleteTask(id: string): Promise<ApiResponse<{ id: string }>> {
     const validation = validateInput(uuidSchema, id);
@@ -345,18 +533,43 @@ export class TaskService extends BaseService {
 
     const deletedAt = new Date().toISOString();
 
-    // Delete subtasks first
-    await this.supabase
+    const { data: relationRows, error: relationError } = await this.supabase
       .from("tasks")
-      .update({ deleted_at: deletedAt })
-      .eq("parent_task_id", id)
-      .eq("user_id", this.userId);
+      .select("id, parent_task_id")
+      .eq("user_id", this.userId)
+      .is("deleted_at", null);
 
-    // Delete parent task
+    if (relationError) {
+      return failure(relationError.message);
+    }
+
+    const childrenByParent = new Map<string, string[]>();
+    for (const row of relationRows || []) {
+      const rowRecord = row as Record<string, unknown>;
+      const taskId = rowRecord.id as string;
+      const parentId = rowRecord.parent_task_id as string | null;
+      if (!parentId) continue;
+      const children = childrenByParent.get(parentId) ?? [];
+      children.push(taskId);
+      childrenByParent.set(parentId, children);
+    }
+
+    const taskIdsToDelete = new Set<string>([id]);
+    const queue = [id];
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      const children = childrenByParent.get(current) ?? [];
+      for (const childId of children) {
+        if (taskIdsToDelete.has(childId)) continue;
+        taskIdsToDelete.add(childId);
+        queue.push(childId);
+      }
+    }
+
     const { error } = await this.supabase
       .from("tasks")
       .update({ deleted_at: deletedAt })
-      .eq("id", id)
+      .in("id", Array.from(taskIdsToDelete))
       .eq("user_id", this.userId);
 
     if (error) {
@@ -391,22 +604,19 @@ export class TaskService extends BaseService {
     const parent = parentResult.data;
 
     // Insert all subtasks
-    const { data, error } = await this.supabase
-      .from("tasks")
-      .insert(
-        subtasks.map((s) => ({
-          user_id: this.userId,
-          title: s.title,
-          description: s.description ?? null,
-          estimated_duration_minutes: s.estimatedDurationMinutes,
-          priority: parent.priority,
-          workflow_state_id: parent.workflowStateId,
-          parent_task_id: parentTaskId,
-          ai_generated: true,
-          metadata: { source: "ai-breakdown" },
-        }))
-      )
-      .select(`
+    const { data, error } = await this.supabase.from("tasks").insert(
+      subtasks.map((s) => ({
+        user_id: this.userId,
+        title: s.title,
+        description: s.description ?? null,
+        estimated_duration_minutes: s.estimatedDurationMinutes,
+        priority: parent.priority,
+        workflow_state_id: parent.workflowStateId,
+        parent_task_id: parentTaskId,
+        ai_generated: true,
+        metadata: { source: "ai-breakdown" },
+      }))
+    ).select(`
         *,
         workflow_states (
           id,
@@ -419,7 +629,9 @@ export class TaskService extends BaseService {
       return failure(error.message);
     }
 
-    return success((data || []).map((row) => this.transformTask(row as TaskRow)));
+    return success(
+      (data || []).map((row) => this.transformTask(row as TaskRow))
+    );
   }
 
   /**
@@ -428,7 +640,8 @@ export class TaskService extends BaseService {
   async getUnscheduledTasks(): Promise<ApiResponse<Task[]>> {
     const { data, error } = await this.supabase
       .from("tasks")
-      .select(`
+      .select(
+        `
         *,
         workflow_states!inner (
           id,
@@ -437,7 +650,8 @@ export class TaskService extends BaseService {
           should_auto_schedule,
           scheduling_priority_boost
         )
-      `)
+      `
+      )
       .eq("user_id", this.userId)
       .eq("is_scheduled", false)
       .eq("is_pinned", false)
@@ -450,7 +664,46 @@ export class TaskService extends BaseService {
       return failure(error.message);
     }
 
-    return success((data || []).map((row) => this.transformTask(row as TaskRow)));
+    const tasks = (data || []).map((row) => this.transformTask(row as TaskRow));
+    const dependencyIds = tasks
+      .map((task) => task.dependsOnTaskId)
+      .filter((id): id is string => !!id);
+
+    if (dependencyIds.length === 0) {
+      return success(tasks);
+    }
+
+    const { data: dependencyRows } = await this.supabase
+      .from("tasks")
+      .select(
+        `
+        id,
+        workflow_states (
+          is_terminal
+        )
+      `
+      )
+      .in("id", dependencyIds)
+      .eq("user_id", this.userId)
+      .is("deleted_at", null);
+
+    const resolvedDependencyIds = new Set(
+      (dependencyRows || [])
+        .filter((row) => {
+          const state = (row as Record<string, unknown>)
+            .workflow_states as Record<string, unknown> | null;
+          return !!state && state.is_terminal === true;
+        })
+        .map((row) => (row as Record<string, unknown>).id as string)
+    );
+
+    return success(
+      tasks.filter(
+        (task) =>
+          !task.dependsOnTaskId ||
+          resolvedDependencyIds.has(task.dependsOnTaskId)
+      )
+    );
   }
 
   /**

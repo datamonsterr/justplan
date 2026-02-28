@@ -1,22 +1,23 @@
 import { Redis } from "@upstash/redis";
 import IORedis, { RedisOptions } from "ioredis";
+import { resolveBullMqRedisUrl } from "./config";
 
 /**
  * Upstash Redis REST Client
- * 
+ *
  * Uses HTTP/REST API instead of TCP - perfect for serverless environments!
  * Works in Vercel Edge Functions, Cloudflare Workers, and browser clients.
- * 
+ *
  * Environment Variables:
  * - UPSTASH_REDIS_REST_URL: Your Upstash Redis REST URL
  * - UPSTASH_REDIS_REST_TOKEN: Your Upstash Redis REST token
- * 
+ *
  * Get these from: https://console.upstash.com
- * 
+ *
  * @example
  * ```ts
  * import { redis } from '@/lib/redis/client';
- * 
+ *
  * await redis.set('key', 'value');
  * const value = await redis.get('key');
  * ```
@@ -31,7 +32,7 @@ export const redis = Redis.fromEnv();
 /**
  * Get the Upstash Redis client
  * @returns Upstash Redis client instance
- * 
+ *
  * @example
  * ```ts
  * const client = getRedisClient();
@@ -71,13 +72,13 @@ let ioredisClient: IORedis | null = null;
  */
 function getIORedisOptions(url: string): RedisOptions {
   const isUpstash = url.startsWith("rediss://");
-  
+
   // Base options required for BullMQ
   const baseOptions: RedisOptions = {
     maxRetriesPerRequest: null,
     enableReadyCheck: false,
   };
-  
+
   // Add TLS for Upstash
   if (isUpstash) {
     return {
@@ -87,25 +88,25 @@ function getIORedisOptions(url: string): RedisOptions {
       },
     };
   }
-  
+
   return baseOptions;
 }
 
 /**
  * Create ioredis connection for BullMQ
- * 
+ *
  * Note: This uses TCP connections and requires REDIS_URL environment variable.
  * For regular Redis operations, use the REST client (redis) instead.
- * 
+ *
  * @internal Only for BullMQ queue/worker connections
  */
 export function createIORedisConnection(): IORedis {
-  const redisUrl = process.env.REDIS_URL;
+  const redisUrl = resolveBullMqRedisUrl();
 
   if (!redisUrl) {
     throw new Error(
-      "REDIS_URL environment variable is not set. " +
-      "For BullMQ, provide rediss://... URL from Upstash Console (TCP endpoint)."
+      "BullMQ Redis URL is not set. " +
+        "Provide REDIS_URL (TCP) or UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN."
     );
   }
 

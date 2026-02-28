@@ -7,6 +7,10 @@ import {
   parseTaskInput,
   formatTaskSyntax,
   getAutocompleteSuggestions,
+  applyAutocompleteSuggestion,
+  getInlineAutocompleteSuggestion,
+  getNextSuggestionIndex,
+  hasOpenTaskBracket,
   type ParsedTask,
 } from "./task-parser";
 
@@ -174,7 +178,9 @@ describe("parseTaskInput", () => {
     });
 
     it("parses all attributes", () => {
-      const result = parseTaskInput("Prepare presentation [4hr:high:in-progress:before 2026-02-28]");
+      const result = parseTaskInput(
+        "Prepare presentation [4hr:high:in-progress:before 2026-02-28]"
+      );
       expect(result.success).toBe(true);
       expect(result.data?.title).toBe("Prepare presentation");
       expect(result.data?.estimatedDurationMinutes).toBe(240);
@@ -203,7 +209,9 @@ describe("formatTaskSyntax", () => {
       deadline: "2026-02-28",
     };
     const result = formatTaskSyntax(task);
-    expect(result).toBe("Write report [2hr:high:in-progress:before 2026-02-28]");
+    expect(result).toBe(
+      "Write report [2hr:high:in-progress:before 2026-02-28]"
+    );
   });
 
   it("formats task with only title", () => {
@@ -236,8 +244,62 @@ describe("getAutocompleteSuggestions", () => {
     expect(suggestions).toContain("low");
   });
 
+  it("suggests states as the next component after priority", () => {
+    const suggestions = getAutocompleteSuggestions("Task [2hr:high:");
+    expect(suggestions).toContain("ready");
+    expect(suggestions).toContain("in-progress");
+  });
+
   it("returns empty array for text without brackets", () => {
     const suggestions = getAutocompleteSuggestions("Task");
-    expect(suggestions.length).toBeLessThanOrEqual(5);
+    expect(suggestions).toEqual([]);
+  });
+});
+
+describe("applyAutocompleteSuggestion", () => {
+  it("completes first component and appends colon for next component", () => {
+    const updated = applyAutocompleteSuggestion("Write report [", "2hr");
+    expect(updated).toBe("Write report [2hr:");
+  });
+
+  it("replaces current component and keeps flow to next component", () => {
+    const updated = applyAutocompleteSuggestion("Write report [2hr:h", "high");
+    expect(updated).toBe("Write report [2hr:high:");
+  });
+
+  it("does not append colon after deadline suggestion", () => {
+    const updated = applyAutocompleteSuggestion(
+      "Write report [2hr:high:ready:",
+      "before tomorrow"
+    );
+    expect(updated).toBe("Write report [2hr:high:ready:before tomorrow");
+  });
+
+  it("returns original input when no open bracket exists", () => {
+    const updated = applyAutocompleteSuggestion("Write report", "2hr");
+    expect(updated).toBe("Write report");
+  });
+});
+
+describe("inline and keyboard suggestion helpers", () => {
+  it("detects open bracket correctly", () => {
+    expect(hasOpenTaskBracket("Task [2hr")).toBe(true);
+    expect(hasOpenTaskBracket("Task [2hr]")).toBe(false);
+  });
+
+  it("returns inline suffix for partial token", () => {
+    const suffix = getInlineAutocompleteSuggestion("Task [2hr:h", "high");
+    expect(suffix).toBe("igh");
+  });
+
+  it("returns full suggestion when current token is empty", () => {
+    const suffix = getInlineAutocompleteSuggestion("Task [2hr:", "high");
+    expect(suffix).toBe("high");
+  });
+
+  it("cycles suggestion index next/previous", () => {
+    expect(getNextSuggestionIndex(0, 3, "next")).toBe(1);
+    expect(getNextSuggestionIndex(2, 3, "next")).toBe(0);
+    expect(getNextSuggestionIndex(0, 3, "previous")).toBe(2);
   });
 });

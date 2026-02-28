@@ -5,11 +5,9 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
+import { invalidRequestResponse, internalErrorResponse } from "@/lib/api/error-response";
+import { isApiAuthError, requireApiUser, toApiAuthErrorResponse } from "@/lib/auth";
 import { chat } from "@/lib/ai";
-
-// Mock user ID for development
-const MOCK_USER_ID = "00000000-0000-0000-0000-000000000001";
 
 // Request validation schema
 const chatRequestSchema = z.object({
@@ -26,26 +24,23 @@ const chatRequestSchema = z.object({
  */
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    const userId = user?.id ?? MOCK_USER_ID;
+    const { dbUserId } = await requireApiUser();
 
     const body = await request.json();
 
     // Validate request
     const parsed = chatRequestSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: parsed.error.errors.map(e => e.message).join(", ") },
-        { status: 400 }
+      return invalidRequestResponse(
+        parsed.error.errors.map((e) => e.message).join(", "),
+        parsed.error.errors
       );
     }
 
     const { message, history } = parsed.data;
 
     // Call copilot agent
-    const result = await chat(userId, message, history);
+    const result = await chat(dbUserId, message, history);
 
     if (!result.success) {
       return NextResponse.json(
@@ -62,10 +57,10 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
+    if (isApiAuthError(error)) {
+      return toApiAuthErrorResponse(error);
+    }
     console.error("POST /api/ai/chat error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return internalErrorResponse();
   }
 }

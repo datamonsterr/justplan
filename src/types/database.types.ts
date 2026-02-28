@@ -13,6 +13,7 @@ export interface Database {
         Row: {
           id: string;
           email: string;
+          clerk_user_id: string | null;
           google_user_id: string | null;
           full_name: string | null;
           avatar_url: string | null;
@@ -22,6 +23,7 @@ export interface Database {
         Insert: {
           id?: string;
           email: string;
+          clerk_user_id?: string | null;
           google_user_id?: string | null;
           full_name?: string | null;
           avatar_url?: string | null;
@@ -31,6 +33,7 @@ export interface Database {
         Update: {
           id?: string;
           email?: string;
+          clerk_user_id?: string | null;
           google_user_id?: string | null;
           full_name?: string | null;
           avatar_url?: string | null;
@@ -54,6 +57,9 @@ export interface Database {
           is_pinned: boolean;
           google_task_id: string | null;
           google_calendar_event_id: string | null;
+          parent_task_id: string | null;
+          ai_generated: boolean;
+          depends_on_task_id: string | null;
           metadata: Json;
           created_at: string;
           updated_at: string;
@@ -74,6 +80,9 @@ export interface Database {
           is_pinned?: boolean;
           google_task_id?: string | null;
           google_calendar_event_id?: string | null;
+          parent_task_id?: string | null;
+          ai_generated?: boolean;
+          depends_on_task_id?: string | null;
           metadata?: Json;
           created_at?: string;
           updated_at?: string;
@@ -94,6 +103,9 @@ export interface Database {
           is_pinned?: boolean;
           google_task_id?: string | null;
           google_calendar_event_id?: string | null;
+          parent_task_id?: string | null;
+          ai_generated?: boolean;
+          depends_on_task_id?: string | null;
           metadata?: Json;
           created_at?: string;
           updated_at?: string;

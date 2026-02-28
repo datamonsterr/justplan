@@ -6,14 +6,13 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { internalErrorResponse, invalidRequestResponse } from "@/lib/api/error-response";
+import { isApiAuthError, requireApiUser, toApiAuthErrorResponse } from "@/lib/auth";
 import {
   queueSchedulingJob,
   getQueueStats,
   getUserActiveJobs,
 } from "@/services/scheduling.service";
-
-// TODO: Replace with actual auth
-const MOCK_USER_ID = "00000000-0000-0000-0000-000000000001";
 
 // Request validation schema
 const scheduleRequestSchema = z.object({
@@ -29,21 +28,19 @@ const scheduleRequestSchema = z.object({
  */
 export async function POST(request: NextRequest) {
   try {
+    const { dbUserId } = await requireApiUser();
     const body = await request.json();
     const parsed = scheduleRequestSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Invalid request", details: parsed.error.errors },
-        { status: 400 }
-      );
+      return invalidRequestResponse("Invalid request", parsed.error.errors);
     }
 
     const { taskIds, schedulingWindowDays, optimizeExisting, priority } =
       parsed.data;
 
     const { jobId } = await queueSchedulingJob({
-      userId: MOCK_USER_ID,
+      userId: dbUserId,
       taskIds,
       schedulingWindowDays,
       optimizeExisting,
@@ -57,10 +54,12 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
+    if (isApiAuthError(error)) {
+      return toApiAuthErrorResponse(error);
+    }
     console.error("Scheduling error:", error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Internal error" },
-      { status: 500 }
+    return internalErrorResponse(
+      error instanceof Error ? error.message : "Internal server error"
     );
   }
 }
@@ -71,9 +70,10 @@ export async function POST(request: NextRequest) {
  */
 export async function GET() {
   try {
+    const { dbUserId } = await requireApiUser();
     const [stats, activeJobs] = await Promise.all([
       getQueueStats(),
-      getUserActiveJobs(MOCK_USER_ID),
+      getUserActiveJobs(dbUserId),
     ]);
 
     return NextResponse.json({
@@ -83,10 +83,12 @@ export async function GET() {
       },
     });
   } catch (error) {
+    if (isApiAuthError(error)) {
+      return toApiAuthErrorResponse(error);
+    }
     console.error("Get scheduling stats error:", error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Internal error" },
-      { status: 500 }
+    return internalErrorResponse(
+      error instanceof Error ? error.message : "Internal server error"
     );
   }
 }

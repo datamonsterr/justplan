@@ -458,9 +458,9 @@ export default function WorkflowEditor({
               </div>
               <Slider
                 value={[priorityBoost]}
-                min={-50}
-                max={50}
-                step={5}
+                min={-10}
+                max={10}
+                step={1}
                 onValueChange={([value]) => setPriorityBoost(value)}
               />
               <p className="text-xs text-muted-foreground">

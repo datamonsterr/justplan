@@ -3,38 +3,32 @@
  */
 
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { invalidRequestResponse, internalErrorResponse } from "@/lib/api/error-response";
+import { isApiAuthError, requireApiUser, toApiAuthErrorResponse } from "@/lib/auth";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createWorkflowService } from "@/services/workflow.service";
-
-// Mock user ID for development
-const MOCK_USER_ID = "00000000-0000-0000-0000-000000000001";
 
 /**
  * GET /api/workflows/graph - Get workflow as React Flow graph
  */
 export async function GET() {
   try {
-    const supabase = await createClient();
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    const userId = user?.id ?? MOCK_USER_ID;
+    const { dbUserId } = await requireApiUser();
+    const supabase = createAdminClient();
 
-    const workflowService = createWorkflowService(supabase, userId);
+    const workflowService = createWorkflowService(supabase, dbUserId);
     const result = await workflowService.getWorkflowGraph();
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: result.error },
-        { status: 400 }
-      );
+      return invalidRequestResponse(result.error);
     }
 
     return NextResponse.json({ data: result.data });
   } catch (error) {
+    if (isApiAuthError(error)) {
+      return toApiAuthErrorResponse(error);
+    }
     console.error("GET /api/workflows/graph error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return internalErrorResponse();
   }
 }

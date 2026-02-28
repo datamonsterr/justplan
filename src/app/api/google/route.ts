@@ -5,32 +5,40 @@
 
 import { NextResponse } from "next/server";
 import { getAuthorizationUrl } from "@/lib/google";
-
-// TODO: Replace with actual auth
-const MOCK_USER_ID = "00000000-0000-0000-0000-000000000001";
+import { internalErrorResponse } from "@/lib/api/error-response";
+import { isApiAuthError, requireApiUser, toApiAuthErrorResponse } from "@/lib/auth";
+import {
+  createSignedOAuthState,
+  isSafeRelativeReturnUrl,
+} from "@/lib/auth/oauth-state";
 
 /**
  * GET /api/google
  * Start Google OAuth flow
  */
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    // Include user ID in state for callback
-    const state = Buffer.from(
-      JSON.stringify({
-        userId: MOCK_USER_ID,
-        returnUrl: "/settings",
-      })
-    ).toString("base64url");
+    const { clerkUserId } = await requireApiUser();
+    const { searchParams } = new URL(request.url);
+    const returnUrlCandidate = searchParams.get("returnUrl");
+    const returnUrl =
+      isSafeRelativeReturnUrl(returnUrlCandidate) ? returnUrlCandidate : "/settings";
+
+    const state = createSignedOAuthState({
+      subject: clerkUserId,
+      returnUrl,
+    });
 
     const authUrl = getAuthorizationUrl(state);
 
     return NextResponse.redirect(authUrl);
   } catch (error) {
+    if (isApiAuthError(error)) {
+      return toApiAuthErrorResponse(error);
+    }
     console.error("Google OAuth error:", error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to start OAuth" },
-      { status: 500 }
+    return internalErrorResponse(
+      error instanceof Error ? error.message : "Failed to start OAuth"
     );
   }
 }

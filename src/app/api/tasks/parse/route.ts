@@ -5,6 +5,8 @@
 
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { internalErrorResponse, invalidRequestResponse } from "@/lib/api/error-response";
+import { isApiAuthError, requireApiUser, toApiAuthErrorResponse } from "@/lib/auth";
 import { parseTaskInput } from "@/lib/task-parser";
 
 const parseSchema = z.object({
@@ -13,16 +15,15 @@ const parseSchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    await requireApiUser();
+
     const body = await request.json();
     const parsed = parseSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        { 
-          success: false,
-          error: parsed.error.errors.map(e => e.message).join(", ") 
-        },
-        { status: 400 }
+      return invalidRequestResponse(
+        parsed.error.errors.map((e) => e.message).join(", "),
+        parsed.error.errors
       );
     }
 
@@ -44,10 +45,10 @@ export async function POST(request: Request) {
       data: result.data,
     });
   } catch (error) {
+    if (isApiAuthError(error)) {
+      return toApiAuthErrorResponse(error);
+    }
     console.error("POST /api/tasks/parse error:", error);
-    return NextResponse.json(
-      { success: false, error: "Internal server error" },
-      { status: 500 }
-    );
+    return internalErrorResponse();
   }
 }

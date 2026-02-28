@@ -6,12 +6,11 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { internalErrorResponse, invalidRequestResponse } from "@/lib/api/error-response";
+import { isApiAuthError, requireApiUser, toApiAuthErrorResponse } from "@/lib/auth";
 import { googleSyncQueue } from "@/lib/redis/queue";
 import { isGoogleConnected } from "@/lib/google";
 import type { GoogleSyncJobData } from "@/workers/google-sync.worker";
-
-// TODO: Replace with actual auth
-const MOCK_USER_ID = "00000000-0000-0000-0000-000000000001";
 
 // Request validation schema
 const syncRequestSchema = z.object({
@@ -26,29 +25,25 @@ const syncRequestSchema = z.object({
  */
 export async function POST(request: NextRequest) {
   try {
+    const { dbUserId } = await requireApiUser();
+
     // Check if Google is connected
-    const connected = await isGoogleConnected(MOCK_USER_ID);
+    const connected = await isGoogleConnected(dbUserId);
     if (!connected) {
-      return NextResponse.json(
-        { error: "Google account not connected" },
-        { status: 400 }
-      );
+      return invalidRequestResponse("Google account not connected");
     }
 
     const body = await request.json();
     const parsed = syncRequestSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Invalid request", details: parsed.error.errors },
-        { status: 400 }
-      );
+      return invalidRequestResponse("Invalid request", parsed.error.errors);
     }
 
     const { syncType, daysBack, daysForward } = parsed.data;
 
     const jobData: GoogleSyncJobData = {
-      userId: MOCK_USER_ID,
+      userId: dbUserId,
       syncType,
       daysBack,
       daysForward,
@@ -70,10 +65,12 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
+    if (isApiAuthError(error)) {
+      return toApiAuthErrorResponse(error);
+    }
     console.error("Google sync error:", error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Internal error" },
-      { status: 500 }
+    return internalErrorResponse(
+      error instanceof Error ? error.message : "Internal server error"
     );
   }
 }
@@ -84,8 +81,10 @@ export async function POST(request: NextRequest) {
  */
 export async function GET() {
   try {
+    const { dbUserId } = await requireApiUser();
+
     // Check if Google is connected
-    const connected = await isGoogleConnected(MOCK_USER_ID);
+    const connected = await isGoogleConnected(dbUserId);
 
     // Get queue stats
     const [waiting, active] = await Promise.all([
@@ -103,10 +102,12 @@ export async function GET() {
       },
     });
   } catch (error) {
+    if (isApiAuthError(error)) {
+      return toApiAuthErrorResponse(error);
+    }
     console.error("Get sync status error:", error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Internal error" },
-      { status: 500 }
+    return internalErrorResponse(
+      error instanceof Error ? error.message : "Internal server error"
     );
   }
 }

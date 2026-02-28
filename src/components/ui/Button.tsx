@@ -41,12 +41,31 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  (
+    {
+      className,
+      variant,
+      size,
+      asChild = false,
+      suppressHydrationWarning,
+      ...props
+    },
+    ref
+  ) => {
     const Comp = asChild ? Slot : "button";
+    const hydrationProps = !asChild
+      ? {
+          // Browser extensions can inject attributes (e.g. fdprocessedid) after SSR.
+          // Suppress hydration mismatch noise on shared button primitives.
+          suppressHydrationWarning: suppressHydrationWarning ?? true,
+        }
+      : {};
+
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
+        {...hydrationProps}
         {...props}
       />
     );

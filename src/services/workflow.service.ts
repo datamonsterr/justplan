@@ -306,13 +306,44 @@ export class WorkflowService extends BaseService {
    * Reorder workflow states
    */
   async reorderStates(orderedIds: string[]): Promise<ApiResponse<WorkflowState[]>> {
+    if (orderedIds.length === 0) {
+      return failure("stateIds is required");
+    }
+
+    const { data: existingStates, error: existingError } = await this.supabase
+      .from("workflow_states")
+      .select("id")
+      .eq("user_id", this.userId);
+
+    if (existingError) {
+      return failure(existingError.message);
+    }
+
+    const existingIds = new Set((existingStates || []).map((state) => state.id));
+    const uniqueOrderedIds = new Set(orderedIds);
+    if (uniqueOrderedIds.size !== orderedIds.length) {
+      return failure("stateIds must not contain duplicates");
+    }
+    if (orderedIds.length !== existingIds.size) {
+      return failure("stateIds must include all workflow state IDs");
+    }
+    for (const id of orderedIds) {
+      if (!existingIds.has(id)) {
+        return failure(`Invalid state ID in reorder payload: ${id}`);
+      }
+    }
+
     // Update order for each state
     for (let i = 0; i < orderedIds.length; i++) {
-      await this.supabase
+      const { error } = await this.supabase
         .from("workflow_states")
         .update({ order: i })
         .eq("id", orderedIds[i])
         .eq("user_id", this.userId);
+
+      if (error) {
+        return failure(error.message);
+      }
     }
 
     return this.getAllStates();
@@ -474,12 +505,31 @@ export class WorkflowService extends BaseService {
    */
   async getWorkflowGraph(): Promise<
     ApiResponse<{
-      nodes: Array<{ id: string; data: WorkflowState; position: { x: number; y: number } }>;
+      nodes: Array<{
+        id: string;
+        type: "stateNode";
+        data: {
+          id: string;
+          name: string;
+          color: string;
+          order: number;
+          isDefault: boolean;
+          isTerminal: boolean;
+          excludeFromScheduling: boolean;
+          schedulingPriorityBoost: number;
+        };
+        position: { x: number; y: number };
+      }>;
       edges: Array<{
         id: string;
+        type: "transitionEdge";
         source: string;
         target: string;
-        data: { conditionType: string; conditionValue: unknown };
+        data: {
+          conditionType: string;
+          conditionValue: unknown;
+          isEnabled: boolean;
+        };
       }>;
     }>
   > {
@@ -506,7 +556,17 @@ export class WorkflowService extends BaseService {
       const angle = (2 * Math.PI * index) / nodeCount - Math.PI / 2;
       return {
         id: state.id,
-        data: state,
+        type: "stateNode",
+        data: {
+          id: state.id,
+          name: state.name,
+          color: state.color,
+          order: state.order,
+          isDefault: state.order === 0,
+          isTerminal: state.isTerminal,
+          excludeFromScheduling: !state.shouldAutoSchedule,
+          schedulingPriorityBoost: state.schedulingPriorityBoost,
+        },
         position: {
           x: centerX + radius * Math.cos(angle),
           y: centerY + radius * Math.sin(angle),
@@ -516,11 +576,13 @@ export class WorkflowService extends BaseService {
 
     const edges = transitions.map((transition) => ({
       id: transition.id,
+      type: "transitionEdge",
       source: transition.fromStateId,
       target: transition.toStateId,
       data: {
         conditionType: transition.conditionType,
         conditionValue: transition.conditionValue,
+        isEnabled: transition.isEnabled,
       },
     }));
 

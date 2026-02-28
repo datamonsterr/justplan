@@ -5,12 +5,19 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
+import {
+  invalidRequestResponse,
+  internalErrorResponse,
+} from "@/lib/api/error-response";
+import {
+  isApiAuthError,
+  requireApiUser,
+  toApiAuthErrorResponse,
+} from "@/lib/auth";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createTaskService } from "@/services/task.service";
+import { triggerWorkflowTransitionEvaluation } from "@/services/workflow-transition-trigger.service";
 import { breakdownTask } from "@/lib/ai";
-
-// Mock user ID for development
-const MOCK_USER_ID = "00000000-0000-0000-0000-000000000001";
 
 // Request validation schema
 const breakdownRequestSchema = z.object({
@@ -24,26 +31,24 @@ const breakdownRequestSchema = z.object({
  */
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    const userId = user?.id ?? MOCK_USER_ID;
+    const { dbUserId } = await requireApiUser();
+    const supabase = createAdminClient();
 
     const body = await request.json();
 
     // Validate request
     const parsed = breakdownRequestSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: parsed.error.errors.map(e => e.message).join(", ") },
-        { status: 400 }
+      return invalidRequestResponse(
+        parsed.error.errors.map((e) => e.message).join(", "),
+        parsed.error.errors
       );
     }
 
     const { taskId, createSubtasks } = parsed.data;
 
     // Get the task to break down
-    const taskService = createTaskService(supabase, userId);
+    const taskService = createTaskService(supabase, dbUserId);
     const taskResult = await taskService.getTaskById(taskId);
 
     if (!taskResult.success) {
@@ -64,7 +69,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Call AI breakdown agent
-    const breakdownResult = await breakdownTask(userId, {
+    const breakdownResult = await breakdownTask(dbUserId, {
       taskId: task.id,
       title: task.title,
       description: task.description ?? undefined,
@@ -96,6 +101,10 @@ export async function POST(request: NextRequest) {
 
       if (subtasksResult.success) {
         createdSubtasks = subtasksResult.data;
+        void triggerWorkflowTransitionEvaluation(
+          { userId: dbUserId, taskIds: [task.id] },
+          "POST /api/ai/breakdown"
+        );
       }
     }
 
@@ -110,10 +119,10 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
+    if (isApiAuthError(error)) {
+      return toApiAuthErrorResponse(error);
+    }
     console.error("POST /api/ai/breakdown error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return internalErrorResponse();
   }
 }

@@ -5,7 +5,12 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getJobStatus, cancelJob } from "@/services/scheduling.service";
+import {
+  forbiddenResponse,
+  internalErrorResponse,
+} from "@/lib/api/error-response";
+import { isApiAuthError, requireApiUser, toApiAuthErrorResponse } from "@/lib/auth";
+import { cancelJob, checkJobAccess, getJobStatus } from "@/services/scheduling.service";
 
 interface RouteContext {
   params: Promise<{ jobId: string }>;
@@ -16,11 +21,25 @@ interface RouteContext {
  * Get scheduling job status
  */
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   context: RouteContext
 ) {
   try {
+    const { dbUserId } = await requireApiUser();
     const { jobId } = await context.params;
+    const access = await checkJobAccess(jobId, dbUserId);
+
+    if (access === "not_found") {
+      return NextResponse.json(
+        { error: "Job not found" },
+        { status: 404 }
+      );
+    }
+
+    if (access === "forbidden") {
+      return forbiddenResponse("Access denied");
+    }
+
     const status = await getJobStatus(jobId);
 
     if (!status) {
@@ -34,10 +53,12 @@ export async function GET(
       data: status,
     });
   } catch (error) {
+    if (isApiAuthError(error)) {
+      return toApiAuthErrorResponse(error);
+    }
     console.error("Get job status error:", error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Internal error" },
-      { status: 500 }
+    return internalErrorResponse(
+      error instanceof Error ? error.message : "Internal server error"
     );
   }
 }
@@ -47,11 +68,25 @@ export async function GET(
  * Cancel a scheduling job
  */
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   context: RouteContext
 ) {
   try {
+    const { dbUserId } = await requireApiUser();
     const { jobId } = await context.params;
+    const access = await checkJobAccess(jobId, dbUserId);
+
+    if (access === "not_found") {
+      return NextResponse.json(
+        { error: "Job not found" },
+        { status: 404 }
+      );
+    }
+
+    if (access === "forbidden") {
+      return forbiddenResponse("Access denied");
+    }
+
     const cancelled = await cancelJob(jobId);
 
     if (!cancelled) {
@@ -68,10 +103,12 @@ export async function DELETE(
       },
     });
   } catch (error) {
+    if (isApiAuthError(error)) {
+      return toApiAuthErrorResponse(error);
+    }
     console.error("Cancel job error:", error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Internal error" },
-      { status: 500 }
+    return internalErrorResponse(
+      error instanceof Error ? error.message : "Internal server error"
     );
   }
 }
