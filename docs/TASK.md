@@ -243,7 +243,7 @@ flowchart LR
 - [x] `F10-03` Tests: add missing integration suites for services/routes; Depends on: F10-02; Estimate: 1d; Change Budget: <=400 LOC; Description: prioritize task/workflow/scheduling/google APIs.
 - [ ] `F10-04` Tests: add Playwright critical path E2E suites; Depends on: F10-02; Estimate: 1d; Change Budget: <=400 LOC; Description: auth, task lifecycle, scheduling, workflow transitions, Google sync happy path.
 - [x] `F10-05` CI: migrate workflows to pnpm-only commands; Depends on: F10-03; Estimate: 1d; Change Budget: <=260 LOC; Description: replace npm/npx in GitHub workflows with pnpm equivalents and caches.
-- [ ] `F10-06` CI: quality gates and reporting; Depends on: F10-04, F10-05; Estimate: 1d; Change Budget: <=280 LOC; Description: enforce lint/type/unit/integration/build and optional E2E gate policy.
+- [x] `F10-06` CI: quality gates and reporting; Depends on: F10-04, F10-05; Estimate: 1d; Change Budget: <=280 LOC; Description: enforce lint/type/unit/integration/build and optional E2E gate policy.
 
 ---
 
