@@ -241,7 +241,7 @@ flowchart LR
 - [x] `F10-01` Design Doc: executable test strategy from `docs/05-test-plan.md`; Depends on: F1-05, F2-06, F3-06, F4-06, F5-06, F6-05, F7-05, F8-06, F9-05; Estimate: 0.5d; Change Budget: <=220 LOC; Description: map required suites to actual files and owners.
 - [x] `F10-02` Infra: add `vitest.integration.config.ts` and test env bootstrap; Depends on: F10-01; Estimate: 1d; Change Budget: <=280 LOC; Description: create integration config expected by scripts and stable setup fixtures.
 - [x] `F10-03` Tests: add missing integration suites for services/routes; Depends on: F10-02; Estimate: 1d; Change Budget: <=400 LOC; Description: prioritize task/workflow/scheduling/google APIs.
-- [ ] `F10-04` Tests: add Playwright critical path E2E suites; Depends on: F10-02; Estimate: 1d; Change Budget: <=400 LOC; Description: auth, task lifecycle, scheduling, workflow transitions, Google sync happy path.
+- [x] `F10-04` Tests: add Playwright critical path E2E suites; Depends on: F10-02; Estimate: 1d; Change Budget: <=400 LOC; Description: auth, task lifecycle, scheduling, workflow transitions, Google sync happy path.
 - [x] `F10-05` CI: migrate workflows to pnpm-only commands; Depends on: F10-03; Estimate: 1d; Change Budget: <=260 LOC; Description: replace npm/npx in GitHub workflows with pnpm equivalents and caches.
 - [ ] `F10-06` CI: quality gates and reporting; Depends on: F10-04, F10-05; Estimate: 1d; Change Budget: <=280 LOC; Description: enforce lint/type/unit/integration/build and optional E2E gate policy.
 
